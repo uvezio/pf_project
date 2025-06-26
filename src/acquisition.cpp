@@ -1,4 +1,4 @@
-#include "../header/acquisition.hpp"
+#include "../include/acquisition.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -6,20 +6,20 @@
 
 namespace nn {
 
-sf::Image load_image(std::string const& path)
+sf::Image load_image(std::string const& path, unsigned int min_width,
+                     unsigned int min_height)
 {
   sf::Image image;
   if (!image.loadFromFile(path)) {
-    throw std::runtime_error("Image \"" + path
-                             + "\" not loaded successfully.\n");
+    throw std::runtime_error("Image \"" + path + "\" not loaded successfully.");
   }
-  if (image.getSize().x < 64 || image.getSize().y < 64) {
+  if (image.getSize().x < min_width || image.getSize().y < min_height) {
     throw std::runtime_error("Image \"" + path
                              + "\" size out of bounds.\nSize: "
                              + std::to_string(image.getSize().x) + "x"
                              + std::to_string(image.getSize().y));
   }
-  assert(image.getSize().x >= 64 && image.getSize().y >= 64);
+  assert(image.getSize().x >= min_width && image.getSize().y >= min_height);
 
   return image;
 }
@@ -40,50 +40,36 @@ sf::Color color_interpolation(sf::Color const& c1, sf::Color const& c2,
   auto r = linear_interpolation(c1.r, c2.r, t);
   auto g = linear_interpolation(c1.g, c2.g, t);
   auto b = linear_interpolation(c1.b, c2.b, t);
-  assert(r >= 0 && r <= 255);
-  assert(g >= 0 && g <= 255);
-  assert(b >= 0 && b <= 255);
 
   return sf::Color(r, g, b);
 }
 
-sf::Image resize_image(sf::Image const& image)
+sf::Image resize_image(sf::Image const& image, unsigned int width,
+                       unsigned int height)
 {
-  assert(image.getSize().x >= 64 && image.getSize().y >= 64);
+  assert(image.getSize().x >= width && image.getSize().y >= height);
 
   sf::Image resized;
-  resized.create(64, 64);
+  resized.create(width, height);
 
   auto image_width  = image.getSize().x;
   auto image_height = image.getSize().y;
 
-  for (unsigned int y{0}; y != 64; ++y) {
-    for (unsigned int x{0}; x != 64; ++x) {
-      auto image_x = static_cast<double>(x) * image_width / 64;
-      auto image_y = static_cast<double>(y) * image_height / 64;
+  for (unsigned int y{0}; y != height; ++y) {
+    auto image_y = static_cast<double>(y) * image_height / height;
+    auto y1      = static_cast<unsigned int>(image_y);
+    auto y2      = std::min(y1 + 1, static_cast<unsigned int>(image_width - 1));
+    assert(y2 >= y1 && y2 <= image_height - 1);
+    auto dy = (image_y - y1);
+    assert(dy >= 0. && dy <= 1.);
 
-      auto x1 = static_cast<unsigned int>(image_x);
-      auto y1 = static_cast<unsigned int>(image_y);
-
+    for (unsigned int x{0}; x != width; ++x) {
+      auto image_x = static_cast<double>(x) * image_width / width;
+      auto x1      = static_cast<unsigned int>(image_x);
       auto x2 = std::min(x1 + 1, static_cast<unsigned int>(image_width - 1));
-      auto y2 = std::min(y1 + 1, static_cast<unsigned int>(image_width - 1));
-
       assert(x2 >= x1 && x2 <= image_width - 1);
-      assert(y2 >= y1 && y2 <= image_height - 1);
-
       auto dx = (image_x - x1);
-      auto dy = (image_y - y1);
-
-      if (x1 == x2) {
-        dx = 0;
-      }
-
-      if (y1 == x2) {
-        dy = 0;
-      }
-
       assert(dx >= 0. && dx <= 1.);
-      assert(dy >= 0. && dy <= 1.);
 
       auto c11 = image.getPixel(x1, y1);
       auto c12 = image.getPixel(x1, y2);
@@ -98,33 +84,32 @@ sf::Image resize_image(sf::Image const& image)
     }
   }
 
-  assert(resized.getSize().x == 64 && resized.getSize().y == 64);
+  assert(resized.getSize().x == width && resized.getSize().y == height);
 
   return resized;
 }
 
-Pattern binarize_image(sf::Image const& resized, std::string const& name)
+Pattern binarize_image(sf::Image const& resized, std::string const& name,
+                       unsigned int width, unsigned int height,
+                       sf::Uint8 threshold)
 {
-  assert(resized.getSize().x == 64 && resized.getSize().y == 64);
+  assert(resized.getSize().x == width && resized.getSize().y == height);
 
   Pattern pattern{name};
-  for (unsigned int y{0}; y != 64; ++y) {
-    for (unsigned int x{0}; x != 64; ++x) {
+  for (unsigned int y{0}; y != height; ++y) {
+    for (unsigned int x{0}; x != width; ++x) {
       auto color   = resized.getPixel(x, y);
-      auto average = static_cast<int>((color.r + color.g + color.b) / 3);
-      if (average > 127) {
-        pattern.add(+1);
-      } else {
-        pattern.add(-1);
-      }
+      auto average = (color.r + color.g + color.b) / 3;
+      pattern.add(average > threshold ? +1 : -1);
     }
   }
-  assert(pattern.size() == 64 * 64);
+  assert(pattern.size() == width * height);
 
   return pattern;
 }
 
-std::vector<Image> Acquisition::initialize_images(std::vector<std::string> const& names)
+std::vector<Image>
+Acquisition::initialize_images(std::vector<std::string> const& names)
 {
   std::vector<Image> initialized;
   for (auto const& name : names) {
@@ -135,23 +120,19 @@ std::vector<Image> Acquisition::initialize_images(std::vector<std::string> const
 
 Acquisition::Acquisition(std::vector<std::string> const& names)
     : images_{initialize_images(names)}
+    , source_directory_{"../images/source_images/"}
+    , binarized_directory_{"../images/binarized_images/"}
 {
   assert(images_.size() == names.size());
 
   for (auto const& image : images_) {
-    if (all_loaded_) {
-      assert(image.image.getSize().x >= 64 && image.image.getSize().y >= 64);
-    }
-    if (all_resized_) {
-      assert(image.image.getSize().x == 64 && image.image.getSize().y == 64);
-    }
-    if (all_binarized_) {
-      assert(image.pattern.size() == 64 * 64);
-    }
+    assert(image.image.getSize().x == 0 && image.image.getSize().y == 0);
+    assert(image.image.getSize().x == 0 && image.image.getSize().y == 0);
+    assert(image.pattern.size() == 0);
   }
 }
 
-std::vector<Image> Acquisition::images() const
+const std::vector<Image>& Acquisition::images() const
 {
   return images_;
 }
@@ -159,33 +140,32 @@ std::vector<Image> Acquisition::images() const
 void Acquisition::load_images()
 {
   for (auto& image : images_) {
-    std::string path{"../images/source_images/" + image.name};
-    image.image = load_image(path);
+    std::string path{source_directory_ + image.name};
+    image.image = load_image(path, 64, 64);
   }
-  all_loaded_ = true;
 }
 
 void Acquisition::resize_images()
 {
   for (auto& image : images_) {
-    image.resized = resize_image(image.image);
+    image.resized = resize_image(image.image, 64, 64);
   }
-  all_resized_ = true;
 }
 
 void Acquisition::binarize_images()
 {
   for (auto& image : images_) {
-    image.pattern = binarize_image(image.resized, image.name);
+    auto name = image.name.substr(0, image.name.rfind('.'));
+    name += ".txt";
+    image.pattern = binarize_image(image.resized, name, 64, 64, 127);
   }
-  all_binarized_ = true;
 }
 
 void Acquisition::save_binarized_images() const
 {
   for (auto const& image : images_) {
     image.pattern.save_to_file();
-    image.pattern.save_image(64, 64);
+    image.pattern.save_image(64, 64, binarized_directory_);
   }
 }
 

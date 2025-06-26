@@ -10,8 +10,9 @@ namespace nn {
 class Pattern
 {
  private:
-  std::vector<int> pattern_{};
+  std::vector<int> pattern_;
   std::string name_;
+  static const std::string directory_;
 
  public:
   Pattern(std::string const& path);
@@ -20,13 +21,13 @@ class Pattern
 
   std::size_t size() const;
 
-  //std::string name() const;
+  const std::string& name() const;
 
   void add(int value);
 
   void save_to_file() const;
 
-  void save_image(unsigned int width, unsigned int height) const;
+  void save_image(unsigned int width, unsigned int height, std::string const& directory) const;
 };
 
 } // namespace nn

@@ -1,6 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
-#include "../header/acquisition.hpp"
+#include "../include/acquisition.hpp"
 
 #include "doctest.h"
 
@@ -10,7 +10,7 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
   {
     sf::Image image;
     image.create(0, 0);
-    CHECK_THROWS(image = nn::load_image("../images/source_images/0.jpg"));
+    CHECK_THROWS(image = nn::load_image("../images/source_images/0.jpg", 64, 64));
     CHECK(image.getSize().x == 0);
     CHECK(image.getSize().y == 0);
   }
@@ -18,7 +18,7 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
   SUBCASE("Loading an existing image")
   {
     sf::Image image;
-    image = nn::load_image("../images/source_images/1.jpg");
+    image = nn::load_image("../images/source_images/1.jpg", 64, 64);
     REQUIRE((image.getSize().x >= 64 && image.getSize().y >= 64));
     CHECK(image.getSize().x == 720);
     CHECK(image.getSize().y == 720);
@@ -27,10 +27,10 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
   SUBCASE("Loading an image with size less than 64 pixels")
   {
     sf::Image image;
-    CHECK_THROWS(image = nn::load_image("../images/source_images/-1.jpg"));
+    CHECK_THROWS(image = nn::load_image("../images/source_images/-1.jpg", 64, 64));
   }
 
-  auto image = nn::load_image("../images/source_images/1.jpg");
+  auto image = nn::load_image("../images/source_images/1.jpg", 64, 64);
   REQUIRE((image.getSize().x >= 64 && image.getSize().y >= 64));
 
   SUBCASE("Interpolating two sf::Uint8 values")
@@ -71,16 +71,16 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
 
   SUBCASE("Resizing an image")
   {
-    auto resized = nn::resize_image(image);
+    auto resized = nn::resize_image(image, 64, 64);
     REQUIRE((resized.getSize().x == 64 && resized.getSize().y == 64));
   }
 
-  auto resized = nn::resize_image(image);
+  auto resized = nn::resize_image(image, 64, 64);
   REQUIRE((resized.getSize().x == 64 && resized.getSize().y == 64));
 
   SUBCASE("Binarizing a resized image")
   {
-    auto pattern = nn::binarize_image(resized, "1.jpg");
+    auto pattern = nn::binarize_image(resized, "1.jpg", 64, 64, 127);
     REQUIRE(pattern.size() == 64 * 64);
   }
 }
@@ -131,8 +131,11 @@ TEST_CASE("Testing the class on multiple images")
   {
     acq.resize_images();
     acq.binarize_images();
+    auto it = names.begin();
     for (auto const& image : acq.images()) {
       CHECK(image.pattern.size() == 64 * 64);
+      CHECK(image.pattern.name() == it->substr(0, it->rfind('.')) + ".txt");
+      ++it;
     }
   }
 
@@ -140,11 +143,11 @@ TEST_CASE("Testing the class on multiple images")
   {
     acq.resize_images();
     acq.binarize_images();
-    //acq.save_binarized_images();
+    acq.save_binarized_images();
 
-    /*for (auto const& image : acq.images()) {
-      auto path = "../patterns/" + image.name;
-      std::ifstream infile{path};
+    for (auto const& image : acq.images()) {
+      auto path = image.pattern.name();
+      std::ifstream infile{"../patterns/" + path};
       CHECK(infile);
 
       nn::Pattern pattern;
@@ -154,11 +157,12 @@ TEST_CASE("Testing the class on multiple images")
       }
       CHECK(pattern.size() == 64 * 64);
 
-      path = "../images/binarized_images/" + image.name;
+      path = "../images/binarized_images/";
+      path += image.pattern.name().substr(0, image.pattern.name().find('.')) + ".jpg";
       sf::Image binary_image;
       CHECK(binary_image.loadFromFile(path));
       CHECK(binary_image.getSize().x == 64);
       CHECK(binary_image.getSize().y == 64);
-    }*/
+    }
   }
 }

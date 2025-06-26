@@ -9,16 +9,20 @@
 
 namespace nn {
 
-sf::Image load_image(std::string const& path);
+sf::Image load_image(std::string const& path, unsigned int min_width,
+                     unsigned int min_height);
 
 sf::Uint8 linear_interpolation(sf::Uint8 a, sf::Uint8 b, double t);
 
 sf::Color color_interpolation(sf::Color const& c1, sf::Color const& c2,
                               double t);
 
-sf::Image resize_image(sf::Image const& image);
+sf::Image resize_image(sf::Image const& image, unsigned int width,
+                       unsigned int height);
 
-Pattern binarize_image(sf::Image const& image, std::string const& name);
+Pattern binarize_image(sf::Image const& image, std::string const& name,
+                       unsigned int width, unsigned int height,
+                       sf::Uint8 threshold);
 
 struct Image
 {
@@ -32,16 +36,15 @@ class Acquisition
 {
  private:
   std::vector<Image> images_;
-  bool all_loaded_{false};
-  bool all_resized_{false};
-  bool all_binarized_{false};
+  const std::string source_directory_;
+  const std::string binarized_directory_;
 
   std::vector<Image> initialize_images(std::vector<std::string> const& names);
 
  public:
   Acquisition(std::vector<std::string> const& names);
 
-  std::vector<Image> images() const;
+  const std::vector<Image>& images() const;
 
   void load_images();
 
