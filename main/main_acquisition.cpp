@@ -2,7 +2,7 @@
 #include <exception>
 #include <iostream>
 
-#include "../header/acquisition.hpp"
+#include "../include/acquisition.hpp"
 
 int main() {
   try {

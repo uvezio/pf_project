@@ -14,10 +14,11 @@ sf::Image load_image(std::string const& path, unsigned int min_width,
     throw std::runtime_error("Image \"" + path + "\" not loaded successfully.");
   }
   if (image.getSize().x < min_width || image.getSize().y < min_height) {
-    throw std::runtime_error("Image \"" + path
-                             + "\" size out of bounds.\nSize: "
-                             + std::to_string(image.getSize().x) + "x"
-                             + std::to_string(image.getSize().y));
+    throw std::runtime_error(
+        "Image \"" + path + "\" size out of bounds.\nMinimum size: "
+        + std::to_string(min_width) + "x" + std::to_string(min_height)
+        + "\nActual size: " + std::to_string(image.getSize().x) + "x"
+        + std::to_string(image.getSize().y));
   }
   assert(image.getSize().x >= min_width && image.getSize().y >= min_height);
 
@@ -76,9 +77,8 @@ sf::Image resize_image(sf::Image const& image, unsigned int width,
       auto c21 = image.getPixel(x2, y1);
       auto c22 = image.getPixel(x2, y2);
 
-      sf::Color color =
-          color_interpolation(color_interpolation(c11, c12, dy),
-                              color_interpolation(c21, c22, dy), dx);
+      auto color = color_interpolation(color_interpolation(c11, c12, dy),
+                                       color_interpolation(c21, c22, dy), dx);
 
       resized.setPixel(x, y, color);
     }
@@ -129,6 +129,7 @@ Acquisition::Acquisition(std::vector<std::string> const& names)
     assert(image.image.getSize().x == 0 && image.image.getSize().y == 0);
     assert(image.image.getSize().x == 0 && image.image.getSize().y == 0);
     assert(image.pattern.size() == 0);
+    (void)image;
   }
 }
 
@@ -140,7 +141,7 @@ const std::vector<Image>& Acquisition::images() const
 void Acquisition::load_images()
 {
   for (auto& image : images_) {
-    std::string path{source_directory_ + image.name};
+    auto path   = source_directory_ + image.name;
     image.image = load_image(path, 64, 64);
   }
 }
@@ -165,7 +166,9 @@ void Acquisition::save_binarized_images() const
 {
   for (auto const& image : images_) {
     image.pattern.save_to_file();
-    image.pattern.save_image(64, 64, binarized_directory_);
+    Pattern pattern;
+    pattern.load_from_file(image.pattern.name(), 64 * 64);
+    pattern.create_image(64, 64, binarized_directory_);
   }
 }
 

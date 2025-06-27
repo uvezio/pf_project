@@ -1,7 +1,6 @@
 #ifndef NN_PATTERN_HPP
 #define NN_PATTERN_HPP
 
-#include <SFML/Graphics.hpp>
 #include <string>
 #include <vector>
 
@@ -27,7 +26,10 @@ class Pattern
 
   void save_to_file() const;
 
-  void save_image(unsigned int width, unsigned int height, std::string const& directory) const;
+  void load_from_file(std::string const& path, std::size_t size);
+
+  void create_image(unsigned int width, unsigned int height,
+                  std::string const& directory) const;
 };
 
 } // namespace nn

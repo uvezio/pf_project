@@ -10,7 +10,8 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
   {
     sf::Image image;
     image.create(0, 0);
-    CHECK_THROWS(image = nn::load_image("../images/source_images/0.jpg", 64, 64));
+    CHECK_THROWS(image =
+                     nn::load_image("../images/source_images/0.jpg", 64, 64));
     CHECK(image.getSize().x == 0);
     CHECK(image.getSize().y == 0);
   }
@@ -27,7 +28,8 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
   SUBCASE("Loading an image with size less than 64 pixels")
   {
     sf::Image image;
-    CHECK_THROWS(image = nn::load_image("../images/source_images/-1.jpg", 64, 64));
+    CHECK_THROWS(image =
+                     nn::load_image("../images/source_images/-1.jpg", 64, 64));
   }
 
   auto image = nn::load_image("../images/source_images/1.jpg", 64, 64);
@@ -50,7 +52,8 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
     sf::Uint8 v4{144};
     CHECK(nn::linear_interpolation(v4, v3, t) == 188);
     CHECK(nn::linear_interpolation(v3, v4, t) == 156);
-    CHECK(nn::linear_interpolation(v3, v4, 0.5) == nn::linear_interpolation(v4, v3, 0.5));
+    CHECK(nn::linear_interpolation(v3, v4, 0.5)
+          == nn::linear_interpolation(v4, v3, 0.5));
   }
 
   SUBCASE("Interpolating two sf::Color values")
@@ -146,23 +149,19 @@ TEST_CASE("Testing the class on multiple images")
     acq.save_binarized_images();
 
     for (auto const& image : acq.images()) {
-      auto path = image.pattern.name();
-      std::ifstream infile{"../patterns/" + path};
-      CHECK(infile);
 
-      nn::Pattern pattern;
-      int x;
-      while (infile >> x) {
-        pattern.add(x);
-      }
-      CHECK(pattern.size() == 64 * 64);
-
-      path = "../images/binarized_images/";
-      path += image.pattern.name().substr(0, image.pattern.name().find('.')) + ".jpg";
+      auto name =
+          image.pattern.name().substr(0, image.pattern.name().rfind('.'))
+          + ".jpg";
       sf::Image binary_image;
-      CHECK(binary_image.loadFromFile(path));
+      CHECK(binary_image.loadFromFile("../images/binarized_images/" + name));
       CHECK(binary_image.getSize().x == 64);
       CHECK(binary_image.getSize().y == 64);
+
+      nn::Pattern pattern;
+      pattern.load_from_file(image.pattern.name(), 64 * 64);
+      CHECK(pattern.size() == 64 * 64);
+      CHECK(pattern.name() == image.pattern.name());
     }
   }
 }
