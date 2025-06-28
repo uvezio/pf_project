@@ -18,6 +18,8 @@ class Pattern
 
   Pattern();
 
+  const std::vector<int>& pattern() const;
+
   std::size_t size() const;
 
   const std::string& name() const;
@@ -26,10 +28,10 @@ class Pattern
 
   void save_to_file() const;
 
-  void load_from_file(std::string const& path, std::size_t size);
+  void load_from_file(std::string const& name, std::size_t size);
 
   void create_image(unsigned int width, unsigned int height,
-                  std::string const& directory) const;
+                    std::string const& directory) const;
 };
 
 } // namespace nn

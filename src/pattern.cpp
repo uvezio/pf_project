@@ -12,11 +12,18 @@ const std::string Pattern::directory_{"../patterns/"};
 Pattern::Pattern(std::string const& name)
     : pattern_{}
     , name_{name}
-{}
+{
+  assert(pattern_.size() == 0);
+}
 
 Pattern::Pattern()
     : Pattern::Pattern("")
 {}
+
+const std::vector<int>& Pattern::pattern() const
+{
+  return pattern_;
+}
 
 std::size_t Pattern::size() const
 {
@@ -30,6 +37,7 @@ const std::string& Pattern::name() const
 
 void Pattern::add(int value)
 {
+  assert(value == +1 || value == -1);
   pattern_.push_back(value);
 }
 
@@ -95,6 +103,7 @@ void Pattern::create_image(unsigned int width, unsigned int height,
     for (unsigned int x{0}; x < width; ++x) {
       auto index = y * width + x;
       auto value = pattern_[index];
+      assert(value == +1 || value == -1);
       auto color = value == +1 ? sf::Color::White : sf::Color::Black;
       image.setPixel(x, y, color);
     }

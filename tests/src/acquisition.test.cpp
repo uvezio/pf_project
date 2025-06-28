@@ -1,15 +1,16 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
-#include "../include/acquisition.hpp"
+#include "../../include/acquisition.hpp"
 
-#include "doctest.h"
+#include "../doctest.h"
 
 TEST_CASE("Testing load, resize and binarize functions on single images")
 {
-  SUBCASE("Loading a non existing image")
+  SUBCASE("Loading non existing images")
   {
     sf::Image image;
     image.create(0, 0);
+    CHECK_THROWS(image = nn::load_image("../images/source_images/", 64, 64));
     CHECK_THROWS(image =
                      nn::load_image("../images/source_images/0.jpg", 64, 64));
     CHECK(image.getSize().x == 0);
@@ -23,13 +24,14 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
     REQUIRE((image.getSize().x >= 64 && image.getSize().y >= 64));
     CHECK(image.getSize().x == 720);
     CHECK(image.getSize().y == 720);
+    CHECK_THROWS(image = nn::load_image("../images/source_images/1.jpg", 721, 720));
   }
 
   SUBCASE("Loading an image with size less than 64 pixels")
   {
     sf::Image image;
     CHECK_THROWS(image =
-                     nn::load_image("../images/source_images/-1.jpg", 64, 64));
+                     nn::load_image("../images/source_images/-1.jpeg", 64, 64));
   }
 
   auto image = nn::load_image("../images/source_images/1.jpg", 64, 64);
@@ -88,7 +90,7 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
   }
 }
 
-TEST_CASE("Testing the class on multiple images")
+TEST_CASE("Testing the Acquisition class on multiple images")
 {
   SUBCASE("Loading three different images")
   {
@@ -111,7 +113,7 @@ TEST_CASE("Testing the class on multiple images")
 
   SUBCASE("Loading an image with size less than 64p and two correct ones")
   {
-    std::vector<std::string> names{"-1.jpg", "2.jpeg", "3.jpg"};
+    std::vector<std::string> names{"-1.jpeg", "2.jpeg", "3.jpg"};
     nn::Acquisition acq{names};
     CHECK_THROWS(acq.load_images());
   }
