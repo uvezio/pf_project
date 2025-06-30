@@ -4,7 +4,6 @@
 
 #include "../doctest.h"
 
-#include <filesystem>
 #include <fstream>
 
 TEST_CASE("Testing load, resize and binarize functions on single images")
@@ -99,9 +98,8 @@ TEST_CASE("Testing load, resize and binarize functions on single images")
 
   SUBCASE("Binarizing a resized image")
   {
-    auto pattern = nn::binarize_image(resized, "1.txt", 64, 64, 127);
+    auto pattern = nn::binarize_image(resized, 64, 64, 127);
     REQUIRE(pattern.size() == 64 * 64);
-    REQUIRE(pattern.name() == "1.txt");
   }
 }
 
@@ -152,15 +150,36 @@ TEST_CASE("Testing the Acquisition class on invalid directories")
     nn::Acquisition acq{"tests/"};
     CHECK(std::filesystem::is_empty("../tests/images/binarized_images/"));
   }
+
+  SUBCASE("Non existing patterns directory")
+  {
+    REQUIRE(std::filesystem::exists("../tests/patterns/"));
+    for (auto const& file :
+         std::filesystem::directory_iterator("../tests/patterns/")) {
+      std::filesystem::remove_all(file);
+    }
+    std::filesystem::remove("../tests/patterns/");
+    REQUIRE(!std::filesystem::exists("../tests/patterns/"));
+    nn::Acquisition acq{"tests/"};
+    CHECK(std::filesystem::exists("../tests/patterns/"));
+  }
+
+  SUBCASE("Not empty patterns directory")
+  {
+    std::ofstream img{"../tests/patterns/0.txt"};
+    REQUIRE(!std::filesystem::is_empty("../tests/patterns/"));
+    nn::Acquisition acq{"tests/"};
+    CHECK(std::filesystem::is_empty("../tests/patterns/"));
+  }
 }
 
-TEST_CASE("Testing acquire_images()")
+TEST_CASE("Testing acquire_and_save_patterns()")
 {
   nn::Acquisition acq{"tests/"};
 
   SUBCASE("Acquiring an under-sized image \"(under_sized.jpg)\"")
   {
-    CHECK_THROWS(acq.acquire_images());
+    CHECK_THROWS(acq.acquire_and_save_patterns());
     std::filesystem::remove("../tests/images/source_images/under_sized.jpg");
     REQUIRE(!std::filesystem::exists(
         "../tests/images/source_images/under_sized.jpg"));
@@ -168,36 +187,34 @@ TEST_CASE("Testing acquire_images()")
 
   SUBCASE("Acquiring all the images in the directory")
   {
-    acq.acquire_images();
-    CHECK(acq.images().size() == 4);
-    for (auto const& image : acq.images()) {
-      CHECK(image.image.getSize().x >= 64);
-      CHECK(image.image.getSize().y >= 64);
-      CHECK(image.pattern.size() == 64 * 64);
-      CHECK(image.pattern.name()
-            == image.name.substr(0, image.name.rfind('.')) + ".txt");
+    acq.acquire_and_save_patterns();
+    CHECK(acq.patterns().size() == 4);
+    for (auto const& pattern : acq.patterns()) {
+      CHECK(pattern.size() == 64 * 64);
+    }
+    for (int i{1}; i != 5; ++i) {
+      std::filesystem::path name{std::to_string(i) + ".txt"};
+      CHECK(std::filesystem::is_regular_file("../tests/patterns/"
+                                             + name.string()));
+      nn::Pattern pattern;
+      pattern.load_from_file(name, 64 * 64);
+      CHECK(pattern.size() == 64 * 64);
     }
   }
 
   SUBCASE("Saving multiple binarized images")
   {
-    acq.acquire_images();
+    acq.acquire_and_save_patterns();
     acq.save_binarized_images();
 
-    for (auto const& image : acq.images()) {
-      auto name =
-          image.pattern.name().substr(0, image.pattern.name().rfind('.'))
-          + ".jpg";
+    for (int i{1}; i != 5; ++i) {
+      std::filesystem::path name{std::to_string(i) + ".jpg"};
+
       sf::Image binary_image;
       CHECK(binary_image.loadFromFile("../tests/images/binarized_images/"
-                                      + name));
+                                      + name.string()));
       CHECK(binary_image.getSize().x == 64);
       CHECK(binary_image.getSize().y == 64);
-
-      nn::Pattern pattern;
-      pattern.load_from_file(image.pattern.name(), 64 * 64);
-      CHECK(pattern.size() == 64 * 64);
-      CHECK(pattern.name() == image.pattern.name());
     }
   }
 }

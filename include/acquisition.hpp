@@ -4,6 +4,7 @@
 #include "pattern.hpp"
 
 #include <SFML/Graphics.hpp>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -20,35 +21,29 @@ sf::Color color_interpolation(sf::Color const& c1, sf::Color const& c2,
 sf::Image resize_image(sf::Image const& image, unsigned int width,
                        unsigned int height);
 
-Pattern binarize_image(sf::Image const& image, std::string const& name,
-                       unsigned int width, unsigned int height,
-                       sf::Uint8 threshold);
-
-struct Image
-{
-  std::string name;
-  sf::Image image;
-  Pattern pattern;
-};
+Pattern binarize_image(sf::Image const& image, unsigned int width,
+                       unsigned int height, sf::Uint8 threshold);
 
 class Acquisition
 {
  private:
-  std::vector<Image> images_;
-  const std::string source_directory_;
-  const std::string binarized_directory_;
+  std::vector<Pattern> patterns_;
+  const std::filesystem::path source_directory_;
+  const std::filesystem::path binarized_directory_;
+  const std::filesystem::path patterns_directory_;
 
-  void valid_source_directory_() const;
-  void valid_binarized_directory_() const;
+  void validate_source_directory_() const;
+  void validate_binarized_directory_() const;
+  void validate_patterns_directory_() const;
 
  public:
-  Acquisition(std::string const& dir);
+  Acquisition(std::filesystem::path const& dir);
 
   Acquisition();
 
-  const std::vector<Image>& images() const;
+  const std::vector<Pattern>& patterns() const;
 
-  void acquire_images();
+  void acquire_and_save_patterns();
 
   void save_binarized_images() const;
 };

@@ -7,18 +7,26 @@
 
 namespace nn {
 
-const std::string Pattern::directory_{"../patterns/"};
+std::filesystem::path Pattern::directory_{"../"};
+bool Pattern::initialized_{false};
 
-Pattern::Pattern(std::string const& name)
+Pattern::Pattern()
     : pattern_{}
-    , name_{name}
 {
+  assert(std::filesystem::exists(directory_)
+         && std::filesystem::is_directory(directory_));
   assert(pattern_.size() == 0);
 }
 
-Pattern::Pattern()
-    : Pattern::Pattern("")
-{}
+void Pattern::set_directory(std::filesystem::path const& directory)
+{
+  assert(std::filesystem::exists(directory)
+         && std::filesystem::is_directory(directory));
+  if (!initialized_) {
+    directory_   = directory;
+    initialized_ = true;
+  }
+}
 
 const std::vector<int>& Pattern::pattern() const
 {
@@ -30,51 +38,70 @@ std::size_t Pattern::size() const
   return pattern_.size();
 }
 
-const std::string& Pattern::name() const
-{
-  return name_;
-}
-
 void Pattern::add(int value)
 {
   assert(value == +1 || value == -1);
   pattern_.push_back(value);
 }
 
-void Pattern::save_to_file() const
+void Pattern::save_to_file(std::filesystem::path const& name,
+                           std::size_t size) const
 {
-  std::ofstream outfile{directory_ + name_};
+  assert(std::filesystem::exists(directory_)
+         && std::filesystem::is_directory(directory_));
+
+  auto path = directory_;
+  path.replace_filename(name);
+  assert(path.extension() == ".txt");
+
+  std::ofstream outfile{path};
 
   if (!outfile) {
-    throw std::runtime_error("File \"" + directory_ + name_
+    throw std::runtime_error("File \"" + path.string()
                              + "\" not created successfully.");
   }
+
+  assert(std::filesystem::exists(path)
+         && std::filesystem::is_regular_file(path));
+  assert(path.extension() == ".txt");
+
+  assert(pattern_.size() == size);
 
   for (auto value : pattern_) {
     assert(value == +1 || value == -1);
     if (!(outfile << value << ' ')) {
-      throw std::runtime_error("File \"" + directory_ + name_
+      throw std::runtime_error("File \"" + path.string()
                                + "\" not written successfully.");
     }
   }
 }
 
-void Pattern::load_from_file(std::string const& name, std::size_t size)
+void Pattern::load_from_file(std::filesystem::path const& name,
+                             std::size_t size)
 {
   pattern_.clear();
-  name_ = name;
 
-  std::ifstream infile{directory_ + name};
+  assert(std::filesystem::exists(directory_)
+         && std::filesystem::is_directory(directory_));
+
+  auto path = directory_;
+  path.replace_filename(name);
+
+  assert(std::filesystem::exists(path)
+         && std::filesystem::is_regular_file(path));
+  assert(path.extension() == ".txt");
+
+  std::ifstream infile{path};
 
   if (!infile) {
-    throw std::runtime_error("File \"" + directory_ + name_
+    throw std::runtime_error("File \"" + path.string()
                              + "\" not opened successfully.");
   }
 
   int value;
   while (infile >> value) {
     if (value != +1 && value != -1) {
-      throw std::runtime_error("Error in file \"" + directory_ + name_
+      throw std::runtime_error("Error in file \"" + path.string()
                                + "\".\nEntries must be +1 or -1.");
     }
     pattern_.push_back(value);
@@ -82,18 +109,26 @@ void Pattern::load_from_file(std::string const& name, std::size_t size)
 
   if (pattern_.size() != size) {
     throw std::runtime_error(
-        "Error in file \"" + directory_ + name_
+        "Error in file \"" + path.string()
         + "\".\nNumber of entries must be: " + std::to_string(size)
         + "\nActual number of entries: " + std::to_string(pattern_.size()));
   }
 
-  assert(name_ == name);
   assert(pattern_.size() == size);
 }
 
-void Pattern::create_image(unsigned int width, unsigned int height,
-                           std::string const& directory) const
+void Pattern::create_image(std::filesystem::path const& directory,
+                           std::filesystem::path const& pattern_name,
+                           unsigned int width, unsigned int height) const
 {
+  assert(std::filesystem::exists(directory)
+         && std::filesystem::is_directory(directory));
+
+  auto path = directory;
+  assert(pattern_name.extension() == ".txt");
+  path.replace_filename(pattern_name);
+  path.replace_extension(".jpg");
+
   assert(pattern_.size() == width * height);
 
   sf::Image image;
@@ -109,11 +144,8 @@ void Pattern::create_image(unsigned int width, unsigned int height,
     }
   }
 
-  auto name = name_.substr(0, name_.rfind('.'));
-  name += ".jpg";
-
-  if (!image.saveToFile(directory + name)) {
-    throw std::runtime_error("Image \"" + directory + name
+  if (!image.saveToFile(path)) {
+    throw std::runtime_error("Image \"" + path.string()
                              + "\" not created successfully.");
   }
 }

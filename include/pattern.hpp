@@ -1,6 +1,7 @@
 #ifndef NN_PATTERN_HPP
 #define NN_PATTERN_HPP
 
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -10,28 +11,28 @@ class Pattern
 {
  private:
   std::vector<int> pattern_;
-  std::string name_;
-  static const std::string directory_;
+
+  static std::filesystem::path directory_;
+  static bool initialized_;
 
  public:
-  Pattern(std::string const& path);
-
   Pattern();
+
+  static void set_directory(std::filesystem::path const& directory);
 
   const std::vector<int>& pattern() const;
 
   std::size_t size() const;
 
-  const std::string& name() const;
-
   void add(int value);
 
-  void save_to_file() const;
+  void save_to_file(std::filesystem::path const& name, std::size_t size) const;
 
-  void load_from_file(std::string const& name, std::size_t size);
+  void load_from_file(std::filesystem::path const& name, std::size_t size);
 
-  void create_image(unsigned int width, unsigned int height,
-                    std::string const& directory) const;
+  void create_image(std::filesystem::path const& directory,
+                    std::filesystem::path const& pattern_name,
+                    unsigned int width, unsigned int height) const;
 };
 
 } // namespace nn

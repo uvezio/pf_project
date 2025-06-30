@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <filesystem>
 #include <stdexcept>
 
 namespace nn {
@@ -90,13 +89,13 @@ sf::Image resize_image(sf::Image const& image, unsigned int width,
   return resized;
 }
 
-Pattern binarize_image(sf::Image const& resized, std::string const& name,
-                       unsigned int width, unsigned int height,
-                       sf::Uint8 threshold)
+Pattern binarize_image(sf::Image const& resized, unsigned int width,
+                       unsigned int height, sf::Uint8 threshold)
 {
   assert(resized.getSize().x == width && resized.getSize().y == height);
 
-  Pattern pattern{name};
+  Pattern pattern;
+
   for (unsigned int y{0}; y != height; ++y) {
     for (unsigned int x{0}; x != width; ++x) {
       auto color   = resized.getPixel(x, y);
@@ -109,17 +108,19 @@ Pattern binarize_image(sf::Image const& resized, std::string const& name,
   return pattern;
 }
 
-void Acquisition::valid_source_directory_() const
+void Acquisition::validate_source_directory_() const
 {
   if (!std::filesystem::exists(source_directory_)) {
-    throw std::runtime_error("Directory " + source_directory_ + " not found.");
+    throw std::runtime_error("Directory " + source_directory_.string()
+                             + " not found.");
   }
   if (!std::filesystem::is_directory(source_directory_)) {
-    throw std::runtime_error("Path " + source_directory_
+    throw std::runtime_error("Path " + source_directory_.string()
                              + " is not a directory.");
   }
   if (std::filesystem::is_empty(source_directory_)) {
-    throw std::runtime_error("Directory " + source_directory_ + " is empty.");
+    throw std::runtime_error("Directory " + source_directory_.string()
+                             + " is empty.");
   }
 
   const std::vector<std::string> valid_extensions{".png", ".jpg", ".jpeg"};
@@ -127,7 +128,7 @@ void Acquisition::valid_source_directory_() const
   for (auto const& file :
        std::filesystem::directory_iterator(source_directory_)) {
     if (!file.is_regular_file()) {
-      throw std::runtime_error("File " + source_directory_
+      throw std::runtime_error("File " + source_directory_.string()
                                + file.path().filename().string()
                                + " is not regular file.");
     }
@@ -135,20 +136,20 @@ void Acquisition::valid_source_directory_() const
     if (valid_extensions.end()
         == std::find(valid_extensions.begin(), valid_extensions.end(),
                      file.path().extension())) {
-      throw std::runtime_error("File " + source_directory_
+      throw std::runtime_error("File " + source_directory_.string()
                                + file.path().filename().string()
                                + " has not valid extension.");
     }
   }
 }
 
-void Acquisition::valid_binarized_directory_() const
+void Acquisition::validate_binarized_directory_() const
 {
   if (!std::filesystem::exists(binarized_directory_)) {
     std::filesystem::create_directory(binarized_directory_);
   }
   if (!std::filesystem::is_directory(binarized_directory_)) {
-    throw std::runtime_error("Path " + binarized_directory_
+    throw std::runtime_error("Path " + binarized_directory_.string()
                              + " is not a directory.");
   }
   if (!std::filesystem::is_empty(binarized_directory_)) {
@@ -159,7 +160,77 @@ void Acquisition::valid_binarized_directory_() const
   }
 }
 
-Acquisition::Acquisition(std::string const& dir)
+void Acquisition::validate_patterns_directory_() const
+{
+  if (!std::filesystem::exists(patterns_directory_)) {
+    std::filesystem::create_directory(patterns_directory_);
+  }
+  if (!std::filesystem::is_directory(patterns_directory_)) {
+    throw std::runtime_error("Path " + patterns_directory_.string()
+                             + " is not a directory.");
+  }
+  if (!std::filesystem::is_empty(patterns_directory_)) {
+    for (auto const& file :
+         std::filesystem::directory_iterator(patterns_directory_)) {
+      std::filesystem::remove_all(file.path());
+    }
+  }
+
+  nn::Pattern::set_directory(patterns_directory_);
+}
+
+Acquisition::Acquisition(std::filesystem::path const& dir)
+    : source_directory_{"../" + dir.string() + "images/source_images/"}
+    , binarized_directory_{"../" + dir.string() + "images/binarized_images/"}
+    , patterns_directory_{"../" + dir.string() + "patterns/"}
+{
+  validate_source_directory_();
+  validate_binarized_directory_();
+  validate_patterns_directory_();
+}
+
+Acquisition::Acquisition()
+    : Acquisition::Acquisition("")
+{}
+
+const std::vector<Pattern>& Acquisition::patterns() const
+{
+  return patterns_;
+}
+
+void Acquisition::acquire_and_save_patterns()
+{
+  for (auto const& file :
+       std::filesystem::directory_iterator(source_directory_)) {
+    auto image = load_image(file.path().string(), 64, 64);
+    assert(image.getSize().x >= 64 && image.getSize().y >= 64);
+
+    image = resize_image(image, 64, 64);
+    assert(image.getSize().x == 64 && image.getSize().y == 64);
+
+    auto name = file.path().filename().replace_extension(".txt");
+    assert(name.extension() == ".txt");
+
+    auto pattern = binarize_image(image, 64, 64, 127);
+    assert(pattern.size() == 64 * 64);
+
+    pattern.save_to_file(name, 64 * 64);
+    patterns_.push_back(pattern);
+  }
+}
+
+void Acquisition::save_binarized_images() const
+{
+  for (auto const& file :
+       std::filesystem::directory_iterator(patterns_directory_)) {
+        Pattern pattern;
+        auto name = file.path().filename();
+        pattern.load_from_file(name, 64 * 64);
+        pattern.create_image(binarized_directory_, name, 64, 64);
+  }
+}
+
+/*Acquisition::Acquisition(std::string const& dir)
     : source_directory_{"../" + dir + "images/source_images/"}
     , binarized_directory_{"../" + dir + "images/binarized_images/"}
 {
@@ -195,16 +266,6 @@ void Acquisition::acquire_images()
 
     images_.push_back({name, image, pattern});
   }
-}
-
-void Acquisition::save_binarized_images() const
-{
-  for (auto const& image : images_) {
-    image.pattern.save_to_file();
-    Pattern pattern;
-    pattern.load_from_file(image.pattern.name(), 64 * 64);
-    pattern.create_image(64, 64, binarized_directory_);
-  }
-}
+}*/
 
 } // namespace nn
