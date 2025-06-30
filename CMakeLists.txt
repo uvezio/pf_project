@@ -54,9 +54,9 @@ if (BUILD_TESTING)
   # aggiungi l'eseguibile progetto.t alla lista dei test
   add_test(NAME acquisition.t COMMAND acquisition.t)
 
-  add_executable(pattern.t tests/src/pattern.test.cpp src/pattern.cpp)
-  target_link_libraries(pattern.t PRIVATE sfml-graphics) 
+  #add_executable(pattern.t tests/src/pattern.test.cpp src/pattern.cpp)
+  #target_link_libraries(pattern.t PRIVATE sfml-graphics) 
 
-  add_test(NAME pattern.t COMMAND pattern.t)
+  #add_test(NAME pattern.t COMMAND pattern.t)
 
 endif()

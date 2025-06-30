@@ -28,7 +28,6 @@ struct Image
 {
   std::string name;
   sf::Image image;
-  sf::Image resized;
   Pattern pattern;
 };
 
@@ -39,18 +38,17 @@ class Acquisition
   const std::string source_directory_;
   const std::string binarized_directory_;
 
-  std::vector<Image> initialize_images(std::vector<std::string> const& names);
+  void valid_source_directory_() const;
+  void valid_binarized_directory_() const;
 
  public:
-  Acquisition(std::vector<std::string> const& names);
+  Acquisition(std::string const& dir);
+
+  Acquisition();
 
   const std::vector<Image>& images() const;
 
-  void load_images();
-
-  void resize_images();
-
-  void binarize_images();
+  void acquire_images();
 
   void save_binarized_images() const;
 };

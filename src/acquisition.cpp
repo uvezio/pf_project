@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <filesystem>
 #include <stdexcept>
 
 namespace nn {
@@ -108,57 +109,91 @@ Pattern binarize_image(sf::Image const& resized, std::string const& name,
   return pattern;
 }
 
-std::vector<Image>
-Acquisition::initialize_images(std::vector<std::string> const& names)
+void Acquisition::valid_source_directory_() const
 {
-  std::vector<Image> initialized;
-  for (auto const& name : names) {
-    initialized.push_back(Image{name, {}, {}, {}});
+  if (!std::filesystem::exists(source_directory_)) {
+    throw std::runtime_error("Directory " + source_directory_ + " not found.");
   }
-  return initialized;
+  if (!std::filesystem::is_directory(source_directory_)) {
+    throw std::runtime_error("Path " + source_directory_
+                             + " is not a directory.");
+  }
+  if (std::filesystem::is_empty(source_directory_)) {
+    throw std::runtime_error("Directory " + source_directory_ + " is empty.");
+  }
+
+  const std::vector<std::string> valid_extensions{".png", ".jpg", ".jpeg"};
+
+  for (auto const& file :
+       std::filesystem::directory_iterator(source_directory_)) {
+    if (!file.is_regular_file()) {
+      throw std::runtime_error("File " + source_directory_
+                               + file.path().filename().string()
+                               + " is not regular file.");
+    }
+
+    if (valid_extensions.end()
+        == std::find(valid_extensions.begin(), valid_extensions.end(),
+                     file.path().extension())) {
+      throw std::runtime_error("File " + source_directory_
+                               + file.path().filename().string()
+                               + " has not valid extension.");
+    }
+  }
 }
 
-Acquisition::Acquisition(std::vector<std::string> const& names)
-    : images_{initialize_images(names)}
-    , source_directory_{"../images/source_images/"}
-    , binarized_directory_{"../images/binarized_images/"}
+void Acquisition::valid_binarized_directory_() const
 {
-  assert(images_.size() == names.size());
-
-  for (auto const& image : images_) {
-    assert(image.image.getSize().x == 0 && image.image.getSize().y == 0);
-    assert(image.image.getSize().x == 0 && image.image.getSize().y == 0);
-    assert(image.pattern.size() == 0);
-    (void)image;
+  if (!std::filesystem::exists(binarized_directory_)) {
+    std::filesystem::create_directory(binarized_directory_);
+  }
+  if (!std::filesystem::is_directory(binarized_directory_)) {
+    throw std::runtime_error("Path " + binarized_directory_
+                             + " is not a directory.");
+  }
+  if (!std::filesystem::is_empty(binarized_directory_)) {
+    for (auto const& file :
+         std::filesystem::directory_iterator(binarized_directory_)) {
+      std::filesystem::remove_all(file.path());
+    }
   }
 }
+
+Acquisition::Acquisition(std::string const& dir)
+    : source_directory_{"../" + dir + "images/source_images/"}
+    , binarized_directory_{"../" + dir + "images/binarized_images/"}
+{
+  assert(images_.size() == 0);
+  valid_source_directory_();
+  valid_binarized_directory_();
+}
+
+Acquisition::Acquisition()
+    : Acquisition::Acquisition("")
+{}
 
 const std::vector<Image>& Acquisition::images() const
 {
   return images_;
 }
 
-void Acquisition::load_images()
+void Acquisition::acquire_images()
 {
-  for (auto& image : images_) {
-    auto path   = source_directory_ + image.name;
-    image.image = load_image(path, 64, 64);
-  }
-}
+  for (auto const& file :
+       std::filesystem::directory_iterator(source_directory_)) {
+    auto name = file.path().filename().string();
 
-void Acquisition::resize_images()
-{
-  for (auto& image : images_) {
-    image.resized = resize_image(image.image, 64, 64);
-  }
-}
+    auto image = load_image(file.path(), 64, 64);
+    assert(image.getSize().x >= 64 && image.getSize().y >= 64);
 
-void Acquisition::binarize_images()
-{
-  for (auto& image : images_) {
-    auto name = image.name.substr(0, image.name.rfind('.'));
-    name += ".txt";
-    image.pattern = binarize_image(image.resized, name, 64, 64, 127);
+    auto resized = resize_image(image, 64, 64);
+    assert(resized.getSize().x == 64 && resized.getSize().y == 64);
+
+    auto pattern_name = name.substr(0, name.rfind('.')) + ".txt";
+    auto pattern      = binarize_image(resized, pattern_name, 64, 64, 127);
+    assert(pattern.size() == 64 * 64);
+
+    images_.push_back({name, image, pattern});
   }
 }
 
