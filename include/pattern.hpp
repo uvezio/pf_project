@@ -14,7 +14,7 @@ class Pattern
   // Not necessary but it is an additional guarantee that the patterns are all
   // in the same directory
   static std::filesystem::path patterns_directory_;
-  // Not necessary but useful so that directory_ is not modified after the first
+  // Not necessary but useful so that patterns_directory_ is not modified after the first
   // call to set_directory()
   static bool initialized_;
 
