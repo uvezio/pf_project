@@ -9,7 +9,7 @@
 
 namespace nn {
 
-// free functions used in the Acquisition class
+// Free functions used in the Acquisition class
 
 sf::Image load_image(std::filesystem::path const& path, unsigned int min_width,
                      unsigned int min_height);
@@ -28,7 +28,7 @@ Pattern binarize_image(sf::Image const& image, unsigned int width,
 class Acquisition
 {
  private:
-  std::vector<Pattern> patterns_; // not necessary but useful in testing
+  std::vector<Pattern> patterns_; // Not necessary but useful in testing
   const std::filesystem::path source_directory_;
   const std::filesystem::path binarized_directory_;
   const std::filesystem::path patterns_directory_;
@@ -39,25 +39,26 @@ class Acquisition
   void validate_patterns_directory_() const;
 
  public:
+  /*
+   * Given the current structure of the project root base_directory can only be
+   * "" or "tests/" to differentiate ordinary code execution from test
+   * execution. Alternatively the program throws an error since the
+   * source_directory_ does not exists.
+   */
   Acquisition(std::filesystem::path const& base_directory);
-  // given the current structure of the project root
-  // base_directory can only be "" or "tests/" to differentiate ordinary code
-  // execution from test execution
-  // alternatively the program throws an error since the source_directory_ does
-  // not exists
 
   Acquisition();
 
   const std::vector<Pattern>& patterns() const;
 
-  void acquire_and_save_patterns();
-  // acquires image from "../base_directory/images/source_images/" and saves
+  // Acquires image from "../base_directory/images/source_images/" and saves
   // patterns in a one-line .txt file in "../base_directory/patterns/"
+  void acquire_and_save_patterns();
 
-  void save_binarized_images() const;
-  // saves binarized images in "../base_directory/images/binarized_images/"
+  // Saves binarized images in "../base_directory/images/binarized_images/"
   // binarized images are constructed by loading patterns stored in
   // "../base_directory/patterns/"
+  void save_binarized_images() const;
 };
 
 } // namespace nn

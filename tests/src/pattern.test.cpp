@@ -1,12 +1,12 @@
 /*
-This test generates files "empty.txt", "test.txt", "incorrect.txt" in
-"../tests/patterns/" and images "test.jpg" and "test_.jpg" in
-"../tests/images/binarized_images/".
-
-These files are implicitly used in "acquisition.test.cpp".
-
-This test does not use the images in "../tests/images/source_images/".
-*/
+ * This test generates files "empty.txt", "test.txt", "incorrect.txt" in
+ * "../tests/patterns/" and images "test.jpg" and "test_.jpg" in
+ * "../tests/images/binarized_images/".
+ *
+ * These files are implicitly used in "acquisition.test.cpp".
+ *
+ * This test does not use the images in "../tests/images/source_images/".
+ */
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
@@ -100,8 +100,8 @@ TEST_CASE("Testing input and output")
     incorrect << v << ' ';
   }
   incorrect.close();
-  // If not closed here it could be written after the is_empty() check in
-  // load_from_file().
+  // If incorrect is not closed here, file at "../tests/patterns/incorrect.txt"
+  // could be written after the is_empty() check in load_from_file()
 
   SUBCASE("Loading an incorrect pattern")
   {

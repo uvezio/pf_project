@@ -12,8 +12,8 @@ sf::Image load_image(std::filesystem::path const& path, unsigned int min_width,
 {
   assert(std::filesystem::is_regular_file(path));
   auto ext = path.extension();
+  // By assumption the only extensions allowed are .jpg, .jpeg, .png
   assert(ext == ".jpg" || ext == ".jpeg" || ext == ".png");
-  // by assumption the only extensions allowed are .jpg, .jpeg, .png
 
   sf::Image image;
   if (!image.loadFromFile(path)) {
@@ -71,12 +71,12 @@ sf::Image resize_image(sf::Image const& image, unsigned int width,
     // y2 must be within the image boundaries
     auto y2 = std::min(y1 + 1, static_cast<unsigned int>(image_width - 1));
     assert(y2 >= y1 && y2 <= image_height - 1);
-    // weight to pass to the interpolation function
+    // dy is the weight to pass to the interpolation function
     auto dy = (image_y - y1);
     assert(dy >= 0. && dy <= 1.);
 
     for (unsigned int x{0}; x != width; ++x) {
-      // analogous to y
+      // Analogous to y
       auto image_x = static_cast<double>(x) * image_width / width;
       auto x1      = static_cast<unsigned int>(image_x);
       auto x2 = std::min(x1 + 1, static_cast<unsigned int>(image_width - 1));
@@ -196,7 +196,7 @@ Acquisition::Acquisition(std::filesystem::path const& base_directory)
     , binarized_directory_{"../" + base_directory.string()
                            + "images/binarized_images/"}
     , patterns_directory_{"../" + base_directory.string() + "patterns/"}
-    , extensions_allowed_{".jpg", ".jpeg", ".png"} // by assumption
+    , extensions_allowed_{".jpg", ".jpeg", ".png"} // By assumption
 {
   assert(extensions_allowed_.size() != 0);
 

@@ -4,8 +4,13 @@
 
 #include "../include/acquisition.hpp"
 
-int main() {
+int main()
+{
   try {
+    nn::Acquisition acquisition;
+
+    acquisition.acquire_and_save_patterns();
+    acquisition.save_binarized_images();
     
   } catch (std::exception const& e) {
     std::cerr << "Caught exception: '" << e.what() << "'\n";

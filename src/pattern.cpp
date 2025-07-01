@@ -71,8 +71,9 @@ void Pattern::save_to_file(std::filesystem::path const& name,
     }
   }
 
+  // If outfile is not closed here, file at path could be written after the
+  // is_empty() check
   outfile.close();
-  // if not closed here it could be written after the is_empty() check
 
   if (size != 0) {
     assert(!std::filesystem::is_empty(path));

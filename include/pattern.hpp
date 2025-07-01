@@ -11,12 +11,12 @@ class Pattern
  private:
   std::vector<int> pattern_;
 
-  static std::filesystem::path patterns_directory_;
-  // not necessary but it is an additional guarantee that the patterns are all
+  // Not necessary but it is an additional guarantee that the patterns are all
   // in the same directory
-  static bool initialized_;
-  // not necessary but useful so that directory_ is not modified after the first
+  static std::filesystem::path patterns_directory_;
+  // Not necessary but useful so that directory_ is not modified after the first
   // call to set_directory()
+  static bool initialized_;
 
  public:
   Pattern();
