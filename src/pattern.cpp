@@ -4,27 +4,26 @@
 #include <cassert>
 #include <fstream>
 #include <stdexcept>
+#include <string>
 
 namespace nn {
 
-std::filesystem::path Pattern::directory_{"../"};
+std::filesystem::path Pattern::patterns_directory_{"../"};
 bool Pattern::initialized_{false};
 
 Pattern::Pattern()
     : pattern_{}
 {
-  assert(std::filesystem::exists(directory_)
-         && std::filesystem::is_directory(directory_));
+  assert(std::filesystem::is_directory(patterns_directory_));
   assert(pattern_.size() == 0);
 }
 
-void Pattern::set_directory(std::filesystem::path const& directory)
+void Pattern::set_directory(std::filesystem::path const& patterns_directory)
 {
-  assert(std::filesystem::exists(directory)
-         && std::filesystem::is_directory(directory));
+  assert(std::filesystem::is_directory(patterns_directory));
   if (!initialized_) {
-    directory_   = directory;
-    initialized_ = true;
+    patterns_directory_ = patterns_directory;
+    initialized_        = true;
   }
 }
 
@@ -47,10 +46,9 @@ void Pattern::add(int value)
 void Pattern::save_to_file(std::filesystem::path const& name,
                            std::size_t size) const
 {
-  assert(std::filesystem::exists(directory_)
-         && std::filesystem::is_directory(directory_));
+  assert(std::filesystem::is_directory(patterns_directory_));
 
-  auto path = directory_;
+  auto path = patterns_directory_;
   path.replace_filename(name);
   assert(path.extension() == ".txt");
 
@@ -61,9 +59,7 @@ void Pattern::save_to_file(std::filesystem::path const& name,
                              + "\" not created successfully.");
   }
 
-  assert(std::filesystem::exists(path)
-         && std::filesystem::is_regular_file(path));
-  assert(path.extension() == ".txt");
+  assert(std::filesystem::is_regular_file(path));
 
   assert(pattern_.size() == size);
 
@@ -74,6 +70,15 @@ void Pattern::save_to_file(std::filesystem::path const& name,
                                + "\" not written successfully.");
     }
   }
+
+  outfile.close();
+  // if not closed here it could be written after the is_empty() check
+
+  if (size != 0) {
+    assert(!std::filesystem::is_empty(path));
+  } else {
+    assert(std::filesystem::is_empty(path));
+  }
 }
 
 void Pattern::load_from_file(std::filesystem::path const& name,
@@ -81,15 +86,18 @@ void Pattern::load_from_file(std::filesystem::path const& name,
 {
   pattern_.clear();
 
-  assert(std::filesystem::exists(directory_)
-         && std::filesystem::is_directory(directory_));
+  assert(std::filesystem::is_directory(patterns_directory_));
 
-  auto path = directory_;
+  auto path = patterns_directory_;
   path.replace_filename(name);
 
-  assert(std::filesystem::exists(path)
-         && std::filesystem::is_regular_file(path));
+  assert(std::filesystem::is_regular_file(path));
   assert(path.extension() == ".txt");
+  if (size != 0) {
+    assert(!std::filesystem::is_empty(path));
+  } else {
+    assert(std::filesystem::is_empty(path));
+  }
 
   std::ifstream infile{path};
 
@@ -117,16 +125,15 @@ void Pattern::load_from_file(std::filesystem::path const& name,
   assert(pattern_.size() == size);
 }
 
-void Pattern::create_image(std::filesystem::path const& directory,
+void Pattern::create_image(std::filesystem::path const& binarized_directory,
                            std::filesystem::path const& pattern_name,
                            unsigned int width, unsigned int height) const
 {
-  assert(std::filesystem::exists(directory)
-         && std::filesystem::is_directory(directory));
+  assert(std::filesystem::is_directory(binarized_directory));
 
-  auto path = directory;
-  assert(pattern_name.extension() == ".txt");
+  auto path = binarized_directory;
   path.replace_filename(pattern_name);
+  assert(path.extension() == ".txt");
   path.replace_extension(".jpg");
 
   assert(pattern_.size() == width * height);
@@ -147,6 +154,13 @@ void Pattern::create_image(std::filesystem::path const& directory,
   if (!image.saveToFile(path)) {
     throw std::runtime_error("Image \"" + path.string()
                              + "\" not created successfully.");
+  }
+
+  assert(std::filesystem::is_regular_file(path));
+  if (width * height != 0) {
+    assert(!std::filesystem::is_empty(path));
+  } else {
+    assert(std::filesystem::is_empty(path));
   }
 }
 

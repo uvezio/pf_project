@@ -2,7 +2,6 @@
 #define NN_PATTERN_HPP
 
 #include <filesystem>
-#include <string>
 #include <vector>
 
 namespace nn {
@@ -12,13 +11,17 @@ class Pattern
  private:
   std::vector<int> pattern_;
 
-  static std::filesystem::path directory_;
+  static std::filesystem::path patterns_directory_;
+  // not necessary but it is an additional guarantee that the patterns are all
+  // in the same directory
   static bool initialized_;
+  // not necessary but useful so that directory_ is not modified after the first
+  // call to set_directory()
 
  public:
   Pattern();
 
-  static void set_directory(std::filesystem::path const& directory);
+  static void set_directory(std::filesystem::path const& patterns_directory);
 
   const std::vector<int>& pattern() const;
 
@@ -30,7 +33,7 @@ class Pattern
 
   void load_from_file(std::filesystem::path const& name, std::size_t size);
 
-  void create_image(std::filesystem::path const& directory,
+  void create_image(std::filesystem::path const& binarized_directory,
                     std::filesystem::path const& pattern_name,
                     unsigned int width, unsigned int height) const;
 };

@@ -1,3 +1,16 @@
+/*
+This test takes as input images "1.jpg", "2.jpeg", "3.jpg", "4.jpg" in
+"../tests/images/source_images/" and generates images "1.jpg", "2.jeg", "3.jpg",
+"4.jpg" in "../tests/images/binarized_images/" and patterns "1.txt", "2.txt",
+"3.txt", "4.txt" in "../tests/patterns/".
+
+This test writes temporary files to perform the necessary checks.
+
+This test uses implicitly output files of the test in "pattern.test.cpp",
+controlling their actual removal during the construction of the nn::Acquisition
+object in TEST_CASE "Testing the Acquisition class on invalid directories".
+*/
+
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include "../../include/acquisition.hpp"
@@ -5,29 +18,11 @@
 #include "../doctest.h"
 
 #include <fstream>
+#include <string>
 
 TEST_CASE("Testing load, resize and binarize functions on single images")
 {
   sf::Image image;
-
-  SUBCASE("Loading non existing images")
-  {
-    image.create(0, 0);
-    CHECK_THROWS(image =
-                     nn::load_image("../tests/images/source_images/", 64, 64));
-    CHECK_THROWS(image = nn::load_image(
-                     "../tests/images/source_images/non_existing.jpg", 64, 64));
-    CHECK(image.getSize().x == 0);
-    CHECK(image.getSize().y == 0);
-  }
-
-  SUBCASE("Loading an image with an invalid extension")
-  {
-    std::ofstream inv{"../tests/images/source_images/invalid_extension.pdf"};
-    CHECK_THROWS(
-        image = nn::load_image(
-            "../tests/images/source_images/invalid_extension.pdf", 64, 64));
-  }
 
   SUBCASE("Loading an existing image")
   {
@@ -123,8 +118,9 @@ TEST_CASE("Testing the Acquisition class on invalid directories")
   }
 
   SUBCASE("Source directory containing files with invalid extensions "
-          "(\"../tests/images/source_images/0.pdf\")")
+          "(\"../tests/images/source_images/invalid_extension.pdf\")")
   {
+    std::ofstream inv{"../tests/images/source_images/invalid_extension.pdf"};
     CHECK_THROWS(nn::Acquisition("tests/"));
     std::filesystem::remove(
         "../tests/images/source_images/invalid_extension.pdf");

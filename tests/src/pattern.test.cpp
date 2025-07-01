@@ -1,3 +1,13 @@
+/*
+This test generates files "empty.txt", "test.txt", "incorrect.txt" in
+"../tests/patterns/" and images "test.jpg" and "test_.jpg" in
+"../tests/images/binarized_images/".
+
+These files are implicitly used in "acquisition.test.cpp".
+
+This test does not use the images in "../tests/images/source_images/".
+*/
+
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include "../../include/pattern.hpp"
@@ -6,6 +16,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <algorithm>
+#include <fstream>
 
 TEST_CASE("Testing the add method")
 {
@@ -59,6 +70,7 @@ TEST_CASE("Testing input and output")
     REQUIRE(pattern.size() == 0);
     pattern.save_to_file("empty.txt", 0);
     CHECK(std::filesystem::is_regular_file("../tests/patterns/empty.txt"));
+    CHECK(std::filesystem::is_empty("../tests/patterns/empty.txt"));
     pattern.load_from_file("empty.txt", 0);
     CHECK(pattern.size() == 0);
   }
@@ -74,7 +86,7 @@ TEST_CASE("Testing input and output")
 
     pattern.save_to_file("test.txt", 10);
     CHECK(std::filesystem::is_regular_file("../tests/patterns/test.txt"));
-
+    CHECK(!std::filesystem::is_empty("../tests/patterns/test.txt"));
     pattern.load_from_file("test.txt", 10);
     CHECK(pattern.size() == 10);
   }
@@ -87,6 +99,9 @@ TEST_CASE("Testing input and output")
   for (auto v : values) {
     incorrect << v << ' ';
   }
+  incorrect.close();
+  // If not closed here it could be written after the is_empty() check in
+  // load_from_file().
 
   SUBCASE("Loading an incorrect pattern")
   {
@@ -97,7 +112,6 @@ TEST_CASE("Testing input and output")
   {
     CHECK_THROWS(pattern.load_from_file("test.txt", 8));
     CHECK_THROWS(pattern.load_from_file("test.txt", 12));
-    CHECK_THROWS(pattern.load_from_file("empty.txt", 1));
   }
 
   SUBCASE("Loading a pattern")
@@ -129,7 +143,8 @@ TEST_CASE("Testing creation of images")
     CHECK(image.getSize().x == 5);
     CHECK(image.getSize().y == 2);
 
-    pattern.create_image("../tests/images/binarized_images/", "test_.txt", 2, 5);
+    pattern.create_image("../tests/images/binarized_images/", "test_.txt", 2,
+                         5);
     image.loadFromFile("../tests/images/binarized_images/test_.jpg");
     CHECK(image.getSize().x == 2);
     CHECK(image.getSize().y == 5);
