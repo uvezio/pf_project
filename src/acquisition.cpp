@@ -1,3 +1,6 @@
+// All relative paths are relative to the "build/" directory
+
+// This path is the only one relative to "acquisition.cpp"
 #include "../include/acquisition.hpp"
 
 #include <algorithm>
@@ -124,31 +127,31 @@ Pattern binarize_image(sf::Image const& resized, unsigned int width,
 void Acquisition::validate_source_directory_() const
 {
   if (!std::filesystem::exists(source_directory_)) {
-    throw std::runtime_error("Directory " + source_directory_.string()
-                             + " not found.");
+    throw std::runtime_error("Directory \"" + source_directory_.string()
+                             + "\" not found.");
   }
   if (!std::filesystem::is_directory(source_directory_)) {
-    throw std::runtime_error("Path " + source_directory_.string()
-                             + " is not a directory.");
+    throw std::runtime_error("Path \"" + source_directory_.string()
+                             + "\" is not a directory.");
   }
   if (std::filesystem::is_empty(source_directory_)) {
-    throw std::runtime_error("Directory " + source_directory_.string()
-                             + " is empty.");
+    throw std::runtime_error("Directory \"" + source_directory_.string()
+                             + "\" is empty.");
   }
 
   for (auto const& file :
        std::filesystem::directory_iterator(source_directory_)) {
     if (!file.is_regular_file()) {
-      throw std::runtime_error("File " + source_directory_.string()
+      throw std::runtime_error("File \"" + source_directory_.string()
                                + file.path().filename().string()
-                               + " is not a regular file.");
+                               + "\" is not a regular file.");
     }
     if (extensions_allowed_.end()
         == std::find(extensions_allowed_.begin(), extensions_allowed_.end(),
                      file.path().extension())) {
-      throw std::runtime_error("File " + source_directory_.string()
+      throw std::runtime_error("File \"" + source_directory_.string()
                                + file.path().filename().string()
-                               + " has an invalid extension.");
+                               + "\" has an invalid extension.");
     }
   }
 }
@@ -159,8 +162,8 @@ void Acquisition::validate_binarized_directory_() const
     std::filesystem::create_directory(binarized_directory_);
   }
   if (!std::filesystem::is_directory(binarized_directory_)) {
-    throw std::runtime_error("Path " + binarized_directory_.string()
-                             + " is not a directory.");
+    throw std::runtime_error("Path \"" + binarized_directory_.string()
+                             + "\" is not a directory.");
   }
   if (!std::filesystem::is_empty(binarized_directory_)) {
     for (auto const& file :
@@ -176,8 +179,8 @@ void Acquisition::validate_patterns_directory_() const
     std::filesystem::create_directory(patterns_directory_);
   }
   if (!std::filesystem::is_directory(patterns_directory_)) {
-    throw std::runtime_error("Path " + patterns_directory_.string()
-                             + " is not a directory.");
+    throw std::runtime_error("Path \"" + patterns_directory_.string()
+                             + "\" is not a directory.");
   }
   if (!std::filesystem::is_empty(patterns_directory_)) {
     for (auto const& file :

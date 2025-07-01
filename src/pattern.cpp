@@ -1,3 +1,6 @@
+// All relative paths are relative to the "build/" directory
+
+// This path is the only one relative to "pattern.cpp"
 #include "../include/pattern.hpp"
 
 #include <SFML/Graphics.hpp>

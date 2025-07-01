@@ -1,3 +1,5 @@
+// All relative paths are relative to the "build/" directory
+
 /*
  * This test takes as input images "1.jpg", "2.jpeg", "3.jpg", "4.jpg" in
  * "../tests/images/source_images/" and generates images "1.jpg", "2.jeg",
@@ -14,8 +16,8 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
+// These two paths are the only ones relative to "acquisition.test.cpp"
 #include "../../include/acquisition.hpp"
-
 #include "../doctest.h"
 
 #include <fstream>

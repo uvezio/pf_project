@@ -1,3 +1,5 @@
+// All relative paths used at runtime are relative to the "build/" directory
+
 /*
  * This test generates files "empty.txt", "test.txt", "incorrect.txt" in
  * "../tests/patterns/" and images "test.jpg" and "test_.jpg" in
@@ -10,8 +12,8 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
+// These two paths are the only ones relative to "pattern.test.cpp"
 #include "../../include/pattern.hpp"
-
 #include "../doctest.h"
 
 #include <SFML/Graphics.hpp>
