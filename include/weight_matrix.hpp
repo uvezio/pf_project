@@ -1,3 +1,5 @@
+// All relative paths are relative to the build/ directory
+
 #ifndef NN_WEIGHT_MATRIX_HPP
 #define NN_WEIGHT_MATRIX_HPP
 
