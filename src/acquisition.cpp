@@ -156,40 +156,22 @@ void Acquisition::validate_source_directory_() const
   }
 }
 
-void Acquisition::validate_binarized_directory_() const
+void Acquisition::configure_output_directories_() const
 {
-  if (!std::filesystem::exists(binarized_directory_)) {
-    std::filesystem::create_directory(binarized_directory_);
-  }
-  if (!std::filesystem::is_directory(binarized_directory_)) {
-    throw std::runtime_error("Path \"" + binarized_directory_.string()
-                             + "\" is not a directory.");
-  }
-  if (!std::filesystem::is_empty(binarized_directory_)) {
-    for (auto const& file :
-         std::filesystem::directory_iterator(binarized_directory_)) {
-      std::filesystem::remove_all(file.path());
+  for (auto const& output_dir : {binarized_directory_, patterns_directory_}) {
+    if (!std::filesystem::exists(output_dir)) {
+      std::filesystem::create_directory(output_dir);
+    }
+    if (!std::filesystem::is_directory(output_dir)) {
+      throw std::runtime_error("Path \"" + output_dir.string()
+                               + "\" is not a directory.");
+    }
+    if (!std::filesystem::is_empty(output_dir)) {
+      for (auto const& file : std::filesystem::directory_iterator(output_dir)) {
+        std::filesystem::remove_all(file.path());
+      }
     }
   }
-}
-
-void Acquisition::validate_patterns_directory_() const
-{
-  if (!std::filesystem::exists(patterns_directory_)) {
-    std::filesystem::create_directory(patterns_directory_);
-  }
-  if (!std::filesystem::is_directory(patterns_directory_)) {
-    throw std::runtime_error("Path \"" + patterns_directory_.string()
-                             + "\" is not a directory.");
-  }
-  if (!std::filesystem::is_empty(patterns_directory_)) {
-    for (auto const& file :
-         std::filesystem::directory_iterator(patterns_directory_)) {
-      std::filesystem::remove_all(file.path());
-    }
-  }
-
-  nn::Pattern::set_directory(patterns_directory_);
 }
 
 // base_directory can only be "" or "tests/"
@@ -204,8 +186,8 @@ Acquisition::Acquisition(std::filesystem::path const& base_directory)
   assert(extensions_allowed_.size() != 0);
 
   validate_source_directory_();
-  validate_binarized_directory_();
-  validate_patterns_directory_();
+  configure_output_directories_();
+  nn::Pattern::set_directory(patterns_directory_);
 
   assert(std::filesystem::is_directory(source_directory_)
          && !std::filesystem::is_empty(source_directory_));

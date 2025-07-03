@@ -13,6 +13,7 @@ class Weight_Matrix
   std::vector<double> weights_;
 
  public:
+  // Not necessary but useful in testing
   Weight_Matrix(std::size_t neurons);
 
   Weight_Matrix();
@@ -21,6 +22,7 @@ class Weight_Matrix
 
   std::size_t neurons() const;
 
+  // Not necessary but useful in testing
   std::size_t matrix_to_vector_index(std::size_t i, std::size_t j) const;
 
   void increment_ij(std::size_t& i, std::size_t& j) const;

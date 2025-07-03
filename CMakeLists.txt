@@ -42,6 +42,8 @@ add_executable(acquisition main/main_acquisition.cpp src/acquisition.cpp src/pat
 target_link_libraries(acquisition PRIVATE sfml-graphics)
 
 # aggiungere eventuali altri eseguibili
+add_executable(training main/main_training.cpp src/training.cpp src/weight_matrix.cpp src/pattern.cpp)
+target_link_libraries(training PRIVATE sfml-graphics)
 
 # il testing e' abilitato di default
 # per disabilitarlo, passare -DBUILD_TESTING=OFF a cmake durante la fase di configurazione
@@ -56,5 +58,12 @@ if (BUILD_TESTING)
   add_executable(acquisition.t tests/src/acquisition.test.cpp src/acquisition.cpp src/pattern.cpp)
   target_link_libraries(acquisition.t PRIVATE sfml-graphics)
   add_test(NAME acquisition.t COMMAND acquisition.t)
+
+  add_executable(weight_matrix.t tests/src/weight_matrix.test.cpp src/weight_matrix.cpp)
+  add_test(NAME weight_matrix.t COMMAND weight_matrix.t)
+
+  add_executable(training.t tests/src/training.test.cpp src/training.cpp src/weight_matrix.cpp src/pattern.cpp)
+  target_link_libraries(training.t PRIVATE sfml-graphics)
+  add_test(NAME training.t COMMAND training.t)
 
 endif()

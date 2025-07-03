@@ -1,5 +1,17 @@
+// All relative paths used at runtime are relative to the "build/" directory
+
+/*
+ * This test generates the files "empty_matrix.txt", "empty_matrix_1.txt",
+ * "test1.txt", "test2.txt", "test.txt" in "../tests/weight_matrix/".
+ *
+ * These files are implicitly removed in "training.test.cpp".
+ *
+ * This test does not use the patterns in "../tests/patterns/".
+ */
+
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
+// These two paths are the only ones relative to "weight_matrix.test.cpp"
 #include "../../include/weight_matrix.hpp"
 #include "../doctest.h"
 
@@ -243,7 +255,7 @@ TEST_CASE("Testing input and output")
     test << v << ' ';
   }
   test.close();
-  // If test is not closed here, file at "../tests/patterns/test.txt"
+  // If test is not closed here, file at "../tests/weight_matrix/test.txt"
   // could be written after the is_empty() check in load_from_file()
 
   SUBCASE("Loading a well-sized weight matrix")

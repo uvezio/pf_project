@@ -1,3 +1,6 @@
+// All relative paths are relative to the "build/" directory
+
+// This path is the only one relative to "weight_matrix.cpp"
 #include "../include/weight_matrix.hpp"
 
 #include <algorithm>
@@ -111,7 +114,7 @@ void Weight_Matrix::fill(std::vector<std::vector<int>> const& patterns,
 
   std::size_t i{1};
   std::size_t j{2};
-  std::generate_n(std::back_inserter(weights_), (neurons_ - 1) * neurons_ / 2,
+  std::generate_n(std::back_inserter(weights_), (neurons - 1) * neurons / 2,
                   [&i, &j, this, &patterns]() {
                     auto w = compute_weight_ij(i, j, patterns);
                     increment_ij(i, j);
@@ -150,9 +153,12 @@ void Weight_Matrix::save_to_file(std::filesystem::path const& matrix_directory,
                                + "\" not written successfully.");
     }
   }
+
+  // If outfile is not closed here, file at path could be written after the
+  // is_empty() check
   outfile.close();
 
-  if (neurons_ != 0 && neurons_ != 1) {
+  if (neurons != 0 && neurons != 1) {
     assert(!std::filesystem::is_empty(path));
   } else {
     assert(std::filesystem::is_empty(path));
@@ -173,7 +179,7 @@ void Weight_Matrix::load_from_file(
 
   assert(std::filesystem::is_regular_file(path));
   assert(path.extension() == ".txt");
-  if (neurons_ != 0 && neurons_ != 1) {
+  if (neurons != 0 && neurons != 1) {
     assert(!std::filesystem::is_empty(path));
   } else {
     assert(std::filesystem::is_empty(path));

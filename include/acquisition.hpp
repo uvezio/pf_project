@@ -3,6 +3,7 @@
 #ifndef NN_ACQUISITION_HPP
 #define NN_ACQUISITION_HPP
 
+// This path is the only one relative to "acquisition.hpp"
 #include "pattern.hpp"
 
 #include <SFML/Graphics.hpp>
@@ -37,12 +38,11 @@ class Acquisition
   const std::vector<std::filesystem::path> extensions_allowed_;
 
   void validate_source_directory_() const;
-  void validate_binarized_directory_() const;
-  void validate_patterns_directory_() const;
+  void configure_output_directories_() const;
 
  public:
   /*
-   * Given the current structure of the project root base_directory can only be
+   * Given the current structure of the project root, base_directory can only be
    * "" or "tests/" to differentiate ordinary code execution from test
    * execution. Alternatively the program throws an error since the
    * source_directory_ does not exists.
@@ -53,7 +53,7 @@ class Acquisition
 
   const std::vector<Pattern>& patterns() const;
 
-  // Acquires image from "../base_directory/images/source_images/" and saves
+  // Acquires images from "../base_directory/images/source_images/" and saves
   // patterns in a one-line .txt file in "../base_directory/patterns/"
   void acquire_and_save_patterns();
 

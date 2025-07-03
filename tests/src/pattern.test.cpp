@@ -1,8 +1,8 @@
 // All relative paths used at runtime are relative to the "build/" directory
 
 /*
- * This test generates files "empty.txt", "test.txt", "incorrect.txt" in
- * "../tests/patterns/" and images "test.jpg" and "test_.jpg" in
+ * This test generates the files "empty.txt", "test.txt", "incorrect.txt" in
+ * "../tests/patterns/" and the images "test.jpg" and "test_.jpg" in
  * "../tests/images/binarized_images/".
  *
  * These files are implicitly used in "acquisition.test.cpp".

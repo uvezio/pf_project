@@ -1,10 +1,10 @@
 // All relative paths are relative to the "build/" directory
 
 /*
- * This test takes as input images "1.jpg", "2.jpeg", "3.jpg", "4.jpg" in
- * "../tests/images/source_images/" and generates images "1.jpg", "2.jeg",
- * "3.jpg", "4.jpg" in "../tests/images/binarized_images/" and patterns "1.txt",
- * "2.txt", "3.txt", "4.txt" in "../tests/patterns/".
+ * This test takes as input the images "1.jpg", "2.jpeg", "3.jpg", "4.jpg" in
+ * "../tests/images/source_images/" and generates the images "1.jpg", "2.jeg",
+ * "3.jpg", "4.jpg" in "../tests/images/binarized_images/" and the patterns
+ * "1.txt", "2.txt", "3.txt", "4.txt" in "../tests/patterns/".
  *
  * This test writes temporary files to perform the necessary checks.
  *
