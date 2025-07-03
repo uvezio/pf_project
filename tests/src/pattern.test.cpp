@@ -2,7 +2,7 @@
 
 /*
  * This test generates the files "empty.txt", "test.txt", "incorrect.txt" in
- * "../tests/patterns/" and the images "test.jpg" and "test_.jpg" in
+ * "../tests/patterns/" and the images "test.png" and "test_.png" in
  * "../tests/images/binarized_images/".
  *
  * These files are implicitly used in "acquisition.test.cpp".
@@ -141,13 +141,13 @@ TEST_CASE("Testing creation of images")
     sf::Image image;
 
     pattern.create_image("../tests/images/binarized_images/", "test.txt", 5, 2);
-    image.loadFromFile("../tests/images/binarized_images/test.jpg");
+    image.loadFromFile("../tests/images/binarized_images/test.png");
     CHECK(image.getSize().x == 5);
     CHECK(image.getSize().y == 2);
 
     pattern.create_image("../tests/images/binarized_images/", "test_.txt", 2,
                          5);
-    image.loadFromFile("../tests/images/binarized_images/test_.jpg");
+    image.loadFromFile("../tests/images/binarized_images/test_.png");
     CHECK(image.getSize().x == 2);
     CHECK(image.getSize().y == 5);
   }

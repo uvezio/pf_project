@@ -2,8 +2,8 @@
 
 /*
  * This test takes as input the images "1.jpg", "2.jpeg", "3.jpg", "4.jpg" in
- * "../tests/images/source_images/" and generates the images "1.jpg", "2.jeg",
- * "3.jpg", "4.jpg" in "../tests/images/binarized_images/" and the patterns
+ * "../tests/images/source_images/" and generates the images "1.png", "2.png",
+ * "3.png", "4.png" in "../tests/images/binarized_images/" and the patterns
  * "1.txt", "2.txt", "3.txt", "4.txt" in "../tests/patterns/".
  *
  * This test writes temporary files to perform the necessary checks.
@@ -144,7 +144,7 @@ TEST_CASE("Testing the Acquisition class on invalid directories")
 
   SUBCASE("Not empty binarized directory")
   {
-    std::ofstream img{"../tests/images/binarized_images/0.jpg"};
+    std::ofstream img{"../tests/images/binarized_images/0.png"};
     REQUIRE(!std::filesystem::is_empty("../tests/images/binarized_images/"));
     nn::Acquisition acq{"tests/"};
     CHECK(std::filesystem::is_empty("../tests/images/binarized_images/"));
@@ -207,7 +207,7 @@ TEST_CASE("Testing acquire_and_save_patterns()")
     acq.save_binarized_images();
 
     for (int i{1}; i != 5; ++i) {
-      std::filesystem::path name{std::to_string(i) + ".jpg"};
+      std::filesystem::path name{std::to_string(i) + ".png"};
 
       sf::Image binary_image;
       CHECK(binary_image.loadFromFile("../tests/images/binarized_images/"

@@ -138,7 +138,7 @@ void Pattern::create_image(std::filesystem::path const& binarized_directory,
   auto path = binarized_directory;
   path.replace_filename(pattern_name);
   assert(path.extension() == ".txt");
-  path.replace_extension(".jpg");
+  path.replace_extension(".png");
 
   assert(pattern_.size() == width * height);
 
