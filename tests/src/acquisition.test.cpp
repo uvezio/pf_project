@@ -196,7 +196,7 @@ TEST_CASE("Testing acquire_and_save_patterns()")
       CHECK(std::filesystem::is_regular_file("../tests/patterns/"
                                              + name.string()));
       nn::Pattern pattern;
-      pattern.load_from_file(name, 64 * 64);
+      pattern.load_from_file("../tests/patterns/", name, 64 * 64);
       CHECK(pattern.size() == 64 * 64);
     }
   }

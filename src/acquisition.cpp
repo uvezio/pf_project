@@ -187,7 +187,6 @@ Acquisition::Acquisition(std::filesystem::path const& base_directory)
 
   validate_source_directory_();
   configure_output_directories_();
-  nn::Pattern::set_directory(patterns_directory_);
 
   assert(std::filesystem::is_directory(source_directory_)
          && !std::filesystem::is_empty(source_directory_));
@@ -227,7 +226,7 @@ void Acquisition::acquire_and_save_patterns()
     auto pattern = binarize_image(image, 64, 64, 127);
     assert(pattern.size() == 64 * 64);
 
-    pattern.save_to_file(name, 64 * 64);
+    pattern.save_to_file(patterns_directory_, name, 64 * 64);
     patterns_.push_back(pattern);
   }
 }
@@ -240,7 +239,8 @@ void Acquisition::save_binarized_images() const
     assert(file.path().extension() == ".txt");
 
     Pattern pattern;
-    pattern.load_from_file(file.path().filename(), 64 * 64);
+    pattern.load_from_file(patterns_directory_, file.path().filename(),
+                           64 * 64);
     pattern.create_image(binarized_directory_, file.path().filename(), 64, 64);
   }
 }

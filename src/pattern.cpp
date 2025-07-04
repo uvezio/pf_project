@@ -11,23 +11,10 @@
 
 namespace nn {
 
-std::filesystem::path Pattern::patterns_directory_{"../"};
-bool Pattern::initialized_{false};
-
 Pattern::Pattern()
     : pattern_{}
 {
-  assert(std::filesystem::is_directory(patterns_directory_));
   assert(pattern_.size() == 0);
-}
-
-void Pattern::set_directory(std::filesystem::path const& patterns_directory)
-{
-  assert(std::filesystem::is_directory(patterns_directory));
-  if (!initialized_) {
-    patterns_directory_ = patterns_directory;
-    initialized_        = true;
-  }
 }
 
 const std::vector<int>& Pattern::pattern() const
@@ -46,12 +33,13 @@ void Pattern::add(int value)
   pattern_.push_back(value);
 }
 
-void Pattern::save_to_file(std::filesystem::path const& name,
+void Pattern::save_to_file(std::filesystem::path const& patterns_directory,
+                           std::filesystem::path const& name,
                            std::size_t size) const
 {
-  assert(std::filesystem::is_directory(patterns_directory_));
+  assert(std::filesystem::is_directory(patterns_directory));
 
-  auto path = patterns_directory_;
+  auto path = patterns_directory;
   path.replace_filename(name);
   assert(path.extension() == ".txt");
 
@@ -85,14 +73,15 @@ void Pattern::save_to_file(std::filesystem::path const& name,
   }
 }
 
-void Pattern::load_from_file(std::filesystem::path const& name,
+void Pattern::load_from_file(std::filesystem::path const& patterns_directory,
+                             std::filesystem::path const& name,
                              std::size_t size)
 {
   pattern_.clear();
 
-  assert(std::filesystem::is_directory(patterns_directory_));
+  assert(std::filesystem::is_directory(patterns_directory));
 
-  auto path = patterns_directory_;
+  auto path = patterns_directory;
   path.replace_filename(name);
 
   assert(std::filesystem::is_regular_file(path));

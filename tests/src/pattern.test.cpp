@@ -24,7 +24,7 @@ TEST_CASE("Testing the add method")
 {
   nn::Pattern pattern{};
 
-  nn::Pattern::set_directory("../tests/patterns/");
+  // nn::Pattern::set_directory("../tests/patterns/");
 
   REQUIRE(pattern.size() == 0);
 
@@ -70,10 +70,10 @@ TEST_CASE("Testing input and output")
   {
     nn::Pattern pattern{};
     REQUIRE(pattern.size() == 0);
-    pattern.save_to_file("empty.txt", 0);
+    pattern.save_to_file("../tests/patterns/", "empty.txt", 0);
     CHECK(std::filesystem::is_regular_file("../tests/patterns/empty.txt"));
     CHECK(std::filesystem::is_empty("../tests/patterns/empty.txt"));
-    pattern.load_from_file("empty.txt", 0);
+    pattern.load_from_file("../tests/patterns/", "empty.txt", 0);
     CHECK(pattern.size() == 0);
   }
 
@@ -86,10 +86,10 @@ TEST_CASE("Testing input and output")
     }
     REQUIRE(pattern.size() == 10);
 
-    pattern.save_to_file("test.txt", 10);
+    pattern.save_to_file("../tests/patterns/", "test.txt", 10);
     CHECK(std::filesystem::is_regular_file("../tests/patterns/test.txt"));
     CHECK(!std::filesystem::is_empty("../tests/patterns/test.txt"));
-    pattern.load_from_file("test.txt", 10);
+    pattern.load_from_file("../tests/patterns/", "test.txt", 10);
     CHECK(pattern.size() == 10);
   }
 
@@ -107,18 +107,18 @@ TEST_CASE("Testing input and output")
 
   SUBCASE("Loading an incorrect pattern")
   {
-    CHECK_THROWS(pattern.load_from_file("incorrect.txt", 9));
+    CHECK_THROWS(pattern.load_from_file("../tests/patterns/", "incorrect.txt", 9));
   }
 
   SUBCASE("Loading over-sized and under-sized patterns")
   {
-    CHECK_THROWS(pattern.load_from_file("test.txt", 8));
-    CHECK_THROWS(pattern.load_from_file("test.txt", 12));
+    CHECK_THROWS(pattern.load_from_file("../tests/patterns/", "test.txt", 8));
+    CHECK_THROWS(pattern.load_from_file("../tests/patterns/", "test.txt", 12));
   }
 
   SUBCASE("Loading a pattern")
   {
-    pattern.load_from_file("test.txt", 10);
+    pattern.load_from_file("../tests/patterns/", "test.txt", 10);
     CHECK(pattern.size() == 10);
   }
 
@@ -126,7 +126,7 @@ TEST_CASE("Testing input and output")
   {
     pattern.add(1);
     REQUIRE(pattern.size() == 1);
-    pattern.load_from_file("test.txt", 10);
+    pattern.load_from_file("../tests/patterns/", "test.txt", 10);
     CHECK(pattern.size() == 10);
   }
 }
@@ -134,7 +134,7 @@ TEST_CASE("Testing input and output")
 TEST_CASE("Testing creation of images")
 {
   nn::Pattern pattern;
-  pattern.load_from_file("test.txt", 10);
+  pattern.load_from_file("../tests/patterns/", "test.txt", 10);
 
   SUBCASE("Creating image in an existing directory")
   {

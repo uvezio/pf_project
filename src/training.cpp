@@ -69,7 +69,6 @@ Training::Training(std::filesystem::path const& base_directory)
 
   validate_patterns_directory_();
   configure_output_directory_();
-  nn::Pattern::set_directory(patterns_directory_);
 
   assert(std::filesystem::is_directory(patterns_directory_)
          && !std::filesystem::is_empty(patterns_directory_));
@@ -96,7 +95,7 @@ void Training::acquire_and_save_weight_matrix()
     assert(file.path().extension() == ".txt");
 
     Pattern pattern;
-    pattern.load_from_file(file.path().filename(), 4096);
+    pattern.load_from_file(patterns_directory_, file.path().filename(), 4096);
     assert(pattern.size() == 4096);
     patterns.push_back(pattern.pattern());
   }

@@ -45,7 +45,7 @@ class Acquisition
    * Given the current structure of the project root, base_directory can only be
    * "" or "tests/" to differentiate ordinary code execution from test
    * execution. Alternatively the program throws an error since the
-   * source_directory_ does not exists.
+   * source_directory_ does not exist.
    */
   Acquisition(std::filesystem::path const& base_directory);
 
