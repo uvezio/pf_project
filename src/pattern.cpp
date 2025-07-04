@@ -180,7 +180,7 @@ void Pattern::add_noise(double probability, std::size_t size)
   (void)size; // Prevent unused parameter warning
 }
 
-void Pattern::cut(unsigned int from_row, unsigned int to_row,
+void Pattern::cut(int new_value, unsigned int from_row, unsigned int to_row,
                   unsigned int from_column, unsigned int to_column,
                   unsigned int width, unsigned int height)
 {
@@ -188,12 +188,13 @@ void Pattern::cut(unsigned int from_row, unsigned int to_row,
   assert(std::all_of(pattern_.begin(), pattern_.end(),
                      [](int value) { return value == +1 || value == -1; }));
 
+  assert(new_value == +1 || new_value == -1);
   assert(from_row <= to_row && to_row <= height);
   assert(from_column <= to_column && to_column <= width);
 
   for (unsigned int y{from_row - 1}; y != to_row; ++y) {
     for (unsigned int x{from_column - 1}; x != to_column; ++x) {
-      pattern_[y * width + x] = -1;
+      pattern_[y * width + x] = new_value;
     }
   }
 

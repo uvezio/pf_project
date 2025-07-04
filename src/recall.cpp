@@ -133,8 +133,9 @@ void Recall::corrupt_patterns() const
 {
   std::random_device r;
   std::default_random_engine eng{r()};
-  std::uniform_real_distribution<double> uniform{0., 0.2};
-  std::uniform_int_distribution<unsigned int> from_uniform_int{1, 36};
+  std::uniform_real_distribution<double> uniform{0.05, 0.15};
+  std::uniform_int_distribution<unsigned int> from_uniform_int{1, 48};
+  std::bernoulli_distribution bernoulli{0.5};
 
   for (auto const& file :
        std::filesystem::directory_iterator(patterns_directory_)) {
@@ -152,15 +153,16 @@ void Recall::corrupt_patterns() const
 
     auto from_x = from_uniform_int(eng);
     auto from_y = from_uniform_int(eng);
-    std::uniform_int_distribution<unsigned int> to_x_uniform_int{from_x + 28,
+    std::uniform_int_distribution<unsigned int> to_x_uniform_int{from_x + 16,
                                                                  64};
     auto to_x = to_x_uniform_int(eng);
-    std::uniform_int_distribution<unsigned int> to_y_uniform_int{from_y + 28,
+    std::uniform_int_distribution<unsigned int> to_y_uniform_int{from_y + 16,
                                                                  64};
     auto to_y = to_y_uniform_int(eng);
 
     auto incomplete = pattern;
-    incomplete.cut(from_y, to_y, from_x, to_x, 64, 64);
+    incomplete.cut((bernoulli(eng)) ? +1 : -1, from_y, to_y, from_x, to_x, 64,
+                   64);
     incomplete.save_to_file(incomplete_patterns_directory_,
                             file.path().filename(), 4096);
     incomplete.create_image(incomplete_images_directory_,

@@ -186,7 +186,7 @@ TEST_CASE("Testing pattern corruption methods")
 
   SUBCASE("Cutting pattern")
   {
-    pattern.cut(1, 3, 1, 1, 2, 5);
+    pattern.cut(-1, 1, 3, 1, 1, 2, 5);
     pattern.create_image("../tests/images/corrupted_images/incomplete_images/",
                          "test.txt", 2, 5);
 
