@@ -133,8 +133,8 @@ void Recall::corrupt_patterns() const
 {
   std::random_device r;
   std::default_random_engine eng{r()};
-  std::uniform_real_distribution<double> uniform{0., 0.25};
-  std::uniform_int_distribution<unsigned int> from_uniform_int{1, 48};
+  std::uniform_real_distribution<double> uniform{0., 0.2};
+  std::uniform_int_distribution<unsigned int> from_uniform_int{1, 36};
 
   for (auto const& file :
        std::filesystem::directory_iterator(patterns_directory_)) {
@@ -152,10 +152,10 @@ void Recall::corrupt_patterns() const
 
     auto from_x = from_uniform_int(eng);
     auto from_y = from_uniform_int(eng);
-    std::uniform_int_distribution<unsigned int> to_x_uniform_int{from_x + 16,
+    std::uniform_int_distribution<unsigned int> to_x_uniform_int{from_x + 28,
                                                                  64};
     auto to_x = to_x_uniform_int(eng);
-    std::uniform_int_distribution<unsigned int> to_y_uniform_int{from_y + 16,
+    std::uniform_int_distribution<unsigned int> to_y_uniform_int{from_y + 28,
                                                                  64};
     auto to_y = to_y_uniform_int(eng);
 
