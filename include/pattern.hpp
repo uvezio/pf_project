@@ -31,6 +31,12 @@ class Pattern
   void create_image(std::filesystem::path const& binarized_directory,
                     std::filesystem::path const& pattern_name,
                     unsigned int width, unsigned int height) const;
+
+  void add_noise(double probability, std::size_t size);
+
+  void cut(unsigned int from_row, unsigned int number_of_rows,
+           unsigned int from_column, unsigned int number_of_columns,
+           unsigned int width, unsigned int height);
 };
 
 } // namespace nn
