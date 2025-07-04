@@ -16,8 +16,10 @@ class Recall
  private:
   const std::filesystem::path weight_matrix_directory_;
   const std::filesystem::path patterns_directory_;
-  const std::filesystem::path noisy_directory_;
-  const std::filesystem::path incomplete_directory_;
+  const std::filesystem::path noisy_patterns_directory_;
+  const std::filesystem::path incomplete_patterns_directory_;
+  const std::filesystem::path noisy_images_directory_;
+  const std::filesystem::path incomplete_images_directory_;
 
   void validate_weight_matrix_directory_() const;
   void validate_patterns_directory_() const;
@@ -37,6 +39,7 @@ class Recall
   // Acquires patterns from "../base_directory/patterns/" and saves
   // the wheight_matrix in a one-line .txt file in
   // "../base_directory/weight_matrix/"
+  void corrupt_patterns() const;
 };
 
 } // namespace nn

@@ -34,8 +34,8 @@ class Pattern
 
   void add_noise(double probability, std::size_t size);
 
-  void cut(unsigned int from_row, unsigned int number_of_rows,
-           unsigned int from_column, unsigned int number_of_columns,
+  void cut(unsigned int from_row, unsigned int to_row,
+           unsigned int from_column, unsigned int to_column,
            unsigned int width, unsigned int height);
 };
 
