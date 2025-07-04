@@ -1,3 +1,6 @@
+// All relative paths are relative to the "build/" directory
+// These two paths are the only ones relative to "recall.cpp"
+// This path is the only one relative to "recall.cpp"
 #include "../include/recall.hpp"
 
 #include <cassert>
@@ -67,20 +70,47 @@ void Recall::validate_patterns_directory_() const
   }
 }
 
+void Recall::configure_output_directories_() const
+{
+  for (auto const& output_dir : {noisy_directory_, incomplete_directory_}) {
+    if (!std::filesystem::exists(output_dir)) {
+      std::filesystem::create_directory(output_dir);
+    }
+    if (!std::filesystem::is_directory(output_dir)) {
+      throw std::runtime_error("Path \"" + output_dir.string()
+                               + "\" is not a directory.");
+    }
+    if (!std::filesystem::is_empty(output_dir)) {
+      for (auto const& file : std::filesystem::directory_iterator(output_dir)) {
+        std::filesystem::remove_all(file.path());
+      }
+    }
+  }
+}
+
+
 // base_directory can only be "" or "tests/"
 Recall::Recall(std::filesystem::path const& base_directory)
     : weight_matrix_directory_{"../" + base_directory.string()
                                + "weight_matrix/"}
     , patterns_directory_{"../" + base_directory.string() + "patterns/"}
+    , noisy_directory_{"../" + base_directory.string()
+                       + "images/corrupted_images/noisy_images/"}
+    , incomplete_directory_{"../" + base_directory.string()
+                            + "images/corrupted_images/incomplete_images/"}
 {
   validate_weight_matrix_directory_();
   validate_patterns_directory_();
-  nn::Pattern::set_directory(patterns_directory_);
+  configure_output_directories_();
 
   assert(std::filesystem::exists(weight_matrix_directory_.string()
                                  + "weight_matrix.txt"));
   assert(std::filesystem::is_directory(patterns_directory_)
          && !std::filesystem::is_empty(patterns_directory_));
+  assert(std::filesystem::is_directory(noisy_directory_)
+         && std::filesystem::is_empty(noisy_directory_));
+  assert(std::filesystem::is_directory(incomplete_directory_)
+         && std::filesystem::is_empty(incomplete_directory_));
 }
 
 Recall::Recall()

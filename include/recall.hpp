@@ -1,6 +1,9 @@
+// All relative paths are relative to the build/ directory
+
 #ifndef NN_RECALL_HPP
 #define NN_RECALL_HPP
 
+// This path is the only one relative to "recall.hpp"
 #include "pattern.hpp"
 #include "weight_matrix.hpp"
 
@@ -13,10 +16,12 @@ class Recall
  private:
   const std::filesystem::path weight_matrix_directory_;
   const std::filesystem::path patterns_directory_;
-  const std::filesystem::path corrupted_directory_;
+  const std::filesystem::path noisy_directory_;
+  const std::filesystem::path incomplete_directory_;
 
   void validate_weight_matrix_directory_() const;
   void validate_patterns_directory_() const;
+  void configure_output_directories_() const;
 
  public:
   /*
@@ -28,6 +33,10 @@ class Recall
   Recall(std::filesystem::path const& base_directory);
 
   Recall();
+
+  // Acquires patterns from "../base_directory/patterns/" and saves
+  // the wheight_matrix in a one-line .txt file in
+  // "../base_directory/weight_matrix/"
 };
 
 } // namespace nn

@@ -3,7 +3,6 @@
 /*
  * This test generates the files "empty_matrix.txt", "empty_matrix_1.txt",
  * "test1.txt", "test2.txt", "test.txt" in "../tests/weight_matrix/".
- *
  * These files are implicitly removed in "training.test.cpp".
  *
  * This test does not use the patterns in "../tests/patterns/".
