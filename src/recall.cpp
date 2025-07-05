@@ -71,22 +71,19 @@ void Recall::validate_patterns_directory_() const
   }
 }
 
-void Recall::configure_output_directories_() const
+void Recall::configure_corrupted_directory_() const
 {
-  for (auto const& output_dir :
-       {noisy_patterns_directory_, incomplete_patterns_directory_,
-        noisy_images_directory_, incomplete_images_directory_}) {
-    if (!std::filesystem::exists(output_dir)) {
-      std::filesystem::create_directory(output_dir);
-    }
-    if (!std::filesystem::is_directory(output_dir)) {
-      throw std::runtime_error("Path \"" + output_dir.string()
-                               + "\" is not a directory.");
-    }
-    if (!std::filesystem::is_empty(output_dir)) {
-      for (auto const& file : std::filesystem::directory_iterator(output_dir)) {
-        std::filesystem::remove_all(file.path());
-      }
+  if (!std::filesystem::exists(corrupted_directory_)) {
+    std::filesystem::create_directory(corrupted_directory_);
+  }
+  if (!std::filesystem::is_directory(corrupted_directory_)) {
+    throw std::runtime_error("Path \"" + corrupted_directory_.string()
+                             + "\" is not a directory.");
+  }
+  if (!std::filesystem::is_empty(corrupted_directory_)) {
+    for (auto const& file :
+         std::filesystem::directory_iterator(corrupted_directory_)) {
+      std::filesystem::remove_all(file.path());
     }
   }
 }
@@ -96,78 +93,47 @@ Recall::Recall(std::filesystem::path const& base_directory)
     : weight_matrix_directory_{"../" + base_directory.string()
                                + "weight_matrix/"}
     , patterns_directory_{"../" + base_directory.string() + "patterns/"}
-    , noisy_patterns_directory_{"../" + base_directory.string()
-                                + "corrupted_patterns/noisy_patterns/"}
-    , incomplete_patterns_directory_{"../" + base_directory.string()
-                                     + "corrupted_patterns/"
-                                       "incomplete_patterns/"}
-    , noisy_images_directory_{"../" + base_directory.string()
-                              + "images/corrupted_images/noisy_images/"}
-    , incomplete_images_directory_{
-          "../" + base_directory.string()
-          + "images/corrupted_images/incomplete_images/"}
+    , corrupted_directory_{"../" + base_directory.string() + "corrupted_files/"}
 {
   validate_weight_matrix_directory_();
   validate_patterns_directory_();
-  configure_output_directories_();
+  configure_corrupted_directory_();
 
   assert(std::filesystem::exists(weight_matrix_directory_.string()
                                  + "weight_matrix.txt"));
   assert(std::filesystem::is_directory(patterns_directory_)
          && !std::filesystem::is_empty(patterns_directory_));
-  assert(std::filesystem::is_directory(noisy_patterns_directory_)
-         && std::filesystem::is_empty(noisy_patterns_directory_));
-  assert(std::filesystem::is_directory(incomplete_patterns_directory_)
-         && std::filesystem::is_empty(incomplete_patterns_directory_));
-  assert(std::filesystem::is_directory(noisy_images_directory_)
-         && std::filesystem::is_empty(noisy_images_directory_));
-  assert(std::filesystem::is_directory(incomplete_images_directory_)
-         && std::filesystem::is_empty(incomplete_images_directory_));
+  assert(std::filesystem::is_directory(corrupted_directory_)
+         && std::filesystem::is_empty(corrupted_directory_));
 }
 
 Recall::Recall()
     : Recall::Recall("")
 {}
 
-void Recall::corrupt_patterns() const
+void Recall::corrupt_pattern(std::filesystem::path const& name) const
 {
-  std::random_device r;
-  std::default_random_engine eng{r()};
-  std::uniform_real_distribution<double> uniform{0.05, 0.15};
-  std::uniform_int_distribution<unsigned int> from_uniform_int{1, 48};
-  std::bernoulli_distribution bernoulli{0.5};
+  std::filesystem::path path{patterns_directory_};
+  path.replace_filename(name);
 
-  for (auto const& file :
-       std::filesystem::directory_iterator(patterns_directory_)) {
-    assert(file.is_regular_file());
-    assert(file.path().extension() == ".txt");
+  assert(std::filesystem::is_regular_file(path));
+  assert(path.extension() == ".txt");
 
-    Pattern pattern;
-    pattern.load_from_file(patterns_directory_, file.path().filename(), 4096);
-    assert(pattern.size() == 4096);
+  Pattern pattern;
+  pattern.load_from_file(patterns_directory_, name, 4096);
+  assert(pattern.size() == 4096);
 
-    auto noisy = pattern;
-    noisy.add_noise(uniform(eng), 4096);
-    noisy.save_to_file(noisy_patterns_directory_, file.path().filename(), 4096);
-    noisy.create_image(noisy_images_directory_, file.path().filename(), 64, 64);
+  auto noisy = pattern;
+  noisy.add_noise(0.1, 4096);
+  auto noisy_name = name.filename().replace_extension(".noise.txt");
+  noisy.save_to_file(corrupted_directory_, noisy_name, 4096);
+  noisy.create_image(corrupted_directory_, noisy_name, 64, 64);
 
-    auto from_x = from_uniform_int(eng);
-    auto from_y = from_uniform_int(eng);
-    std::uniform_int_distribution<unsigned int> to_x_uniform_int{from_x + 16,
-                                                                 64};
-    auto to_x = to_x_uniform_int(eng);
-    std::uniform_int_distribution<unsigned int> to_y_uniform_int{from_y + 16,
-                                                                 64};
-    auto to_y = to_y_uniform_int(eng);
-
-    auto incomplete = pattern;
-    incomplete.cut((bernoulli(eng)) ? +1 : -1, from_y, to_y, from_x, to_x, 64,
-                   64);
-    incomplete.save_to_file(incomplete_patterns_directory_,
-                            file.path().filename(), 4096);
-    incomplete.create_image(incomplete_images_directory_,
-                            file.path().filename(), 64, 64);
-  }
+  auto incomplete = pattern;
+  incomplete.cut(-1, 34, 58, 11, 35, 64, 64);
+  auto cut_name = name.filename().replace_extension(".cut.txt");
+  incomplete.save_to_file(corrupted_directory_, cut_name, 4096);
+  incomplete.create_image(corrupted_directory_, cut_name, 64, 64);
 }
 
 } // namespace nn

@@ -69,36 +69,25 @@ TEST_CASE("Testing the Recall class on invalid directories")
     std::filesystem::remove("../tests/patterns/invalid_extension.pdf");
   }
 
-  SUBCASE("Invalid output directories")
+  SUBCASE("Non existing corrupted directory")
   {
-    std::vector<std::filesystem::path> output_directories{
-        "corrupted_patterns/noisy_patterns/",
-        "corrupted_patterns/incomplete_patterns/",
-        "images/corrupted_images/noisy_images/",
-        "images/corrupted_images/noisy_images/"};
-
-    for (auto const& dir : output_directories) {
-      SUBCASE("Non existing directory")
-      {
-        REQUIRE(std::filesystem::exists("../tests/" + dir.string()));
-        for (auto const& file :
-             std::filesystem::directory_iterator("../tests/" + dir.string())) {
-          std::filesystem::remove_all(file);
-        }
-        std::filesystem::remove("../tests/" + dir.string());
-        REQUIRE(!std::filesystem::exists("../tests/" + dir.string()));
-        nn::Recall rec{"tests/"};
-        CHECK(std::filesystem::exists("../tests/" + dir.string()));
-      }
-
-      SUBCASE("Not empty directory")
-      {
-        std::ofstream img{"../tests/" + dir.string() + "0.txt"};
-        REQUIRE(!std::filesystem::is_empty("../tests/" + dir.string()));
-        nn::Recall rec{"tests/"};
-        CHECK(std::filesystem::is_empty("../tests/" + dir.string()));
-      }
+    REQUIRE(std::filesystem::exists("../tests/corrupted_files/"));
+    for (auto const& file :
+         std::filesystem::directory_iterator("../tests/corrupted_files/")) {
+      std::filesystem::remove_all(file);
     }
+    std::filesystem::remove("../tests/corrupted_files/");
+    REQUIRE(!std::filesystem::exists("../tests/corrupted_files/"));
+    nn::Recall rec{"tests/"};
+    CHECK(std::filesystem::exists("../tests/corrupted_files/"));
+  }
+
+  SUBCASE("Not empty corrupted directory")
+  {
+    std::ofstream img{"../tests/corrupted_files/0.txt"};
+    REQUIRE(!std::filesystem::is_empty("../tests/corrupted_files/"));
+    nn::Recall rec{"tests/"};
+    CHECK(std::filesystem::is_empty("../tests/corrupted_files/"));
   }
 }
 
@@ -117,43 +106,46 @@ TEST_CASE("Testing corrupt_patterns()")
     // "../tests/patterns/under_sized.txt" could be written after the is_empty()
     // check in load_from_file()
 
-    CHECK_THROWS(recall.corrupt_patterns());
+    CHECK_THROWS(recall.corrupt_pattern("under_sized.txt"));
     std::filesystem::remove("../tests/patterns/under_sized.txt");
     REQUIRE(!std::filesystem::exists("../tests/patterns/under_sized.txt"));
   }
 
-  SUBCASE(
-      "Acquiring all the patterns in the directory and saving them")
+  SUBCASE("Acquiring all the patterns in the directory and saving them")
   {
-    recall.corrupt_patterns();
-
     for (int i{1}; i != 5; ++i) {
       std::filesystem::path name{std::to_string(i) + ".txt"};
-      nn::Pattern pattern;
 
-      CHECK(std::filesystem::is_regular_file(
-          "../tests/corrupted_patterns/noisy_patterns/" + name.string()));
-      pattern.load_from_file("../tests/corrupted_patterns/noisy_patterns/",
-                             name, 4096);
-      CHECK(pattern.size() == 4096);
+      recall.corrupt_pattern(name);
 
-      CHECK(std::filesystem::is_regular_file(
-          "../tests/corrupted_patterns/incomplete_patterns/" + name.string()));
-      pattern.load_from_file("../tests/corrupted_patterns/incomplete_patterns/",
-                             name, 4096);
-      CHECK(pattern.size() == 4096);
-
-      name.replace_extension(".png");
+      nn::Pattern corrupted_pattern;
       sf::Image corrupted_image;
 
-      CHECK(corrupted_image.loadFromFile(
-          "../tests/images/corrupted_images/noisy_images/" + name.string()));
+      auto noisy_name = name;
+      noisy_name.replace_extension(".noise.txt");
+      CHECK(std::filesystem::is_regular_file("../tests/corrupted_files/"
+                                             + noisy_name.string()));
+      corrupted_pattern.load_from_file("../tests/corrupted_files/", noisy_name,
+                                       4096);
+      CHECK(corrupted_pattern.size() == 4096);
+
+      noisy_name.replace_extension(".png");
+      CHECK(corrupted_image.loadFromFile("../tests/corrupted_files/"
+                                         + noisy_name.string()));
       CHECK(corrupted_image.getSize().x == 64);
       CHECK(corrupted_image.getSize().y == 64);
 
-      CHECK(corrupted_image.loadFromFile(
-          "../tests/images/corrupted_images/incomplete_images/"
-          + name.string()));
+      auto cut_name = name;
+      cut_name.replace_extension(".cut.txt");
+      CHECK(std::filesystem::is_regular_file("../tests/corrupted_files/"
+                                             + cut_name.string()));
+      corrupted_pattern.load_from_file("../tests/corrupted_files/", cut_name,
+                                       4096);
+      CHECK(corrupted_pattern.size() == 4096);
+
+      cut_name.replace_extension(".png");
+      CHECK(corrupted_image.loadFromFile("../tests/corrupted_files/"
+                                         + cut_name.string()));
       CHECK(corrupted_image.getSize().x == 64);
       CHECK(corrupted_image.getSize().y == 64);
     }
