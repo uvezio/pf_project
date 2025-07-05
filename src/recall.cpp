@@ -124,7 +124,7 @@ void Recall::corrupt_pattern(std::filesystem::path const& name) const
   assert(pattern.size() == 4096);
 
   auto noisy = pattern;
-  noisy.add_noise(0.1, 4096);
+  noisy.add_noise(0.08, 4096);
   auto noisy_name = name.filename().replace_extension(".noise.txt");
   noisy.save_to_file(corrupted_directory_, noisy_name, 4096);
   noisy.create_image(corrupted_directory_, noisy_name, 64, 64);
