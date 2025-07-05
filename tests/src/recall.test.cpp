@@ -3,16 +3,14 @@
 /*
  * This test takes as input the patterns "1.txt", "2.txt", "3.txt", "4.txt" in
  * "../tests/patterns/" the weight matrix "weight_matrix.txt" in
- * "../tests/weight_matrix/" and generates the images "1.png", "2.png",
- * "3.png", "4.png" in both "../tests/images/corrupted_images/noisy_images/" and
- * "../tests/images/corrupted_images/incomplete_images/".
+ * "../tests/weight_matrix/" and generates the output files in
+ * "../tests/corrupted_files/".
  *
  * This test writes temporary files to perform the necessary checks.
  *
- * This test uses implicitly output files of the test in
- * "pattern.test.cpp" controlling their actual removal during the
- * construction of the nn::Recall object in TEST_CASE "Testing the Training
- * class on invalid directories".
+ * This test uses implicitly output files of the test in "pattern.test.cpp"
+ * controlling their actual removal during the construction of the nn::Recall
+ * object in TEST_CASE "Testing the Recall class on invalid directories".
  */
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN

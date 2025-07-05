@@ -33,8 +33,8 @@ class Recall
 
   Recall();
 
-  // Acquires a pattern from "../base_directory/patterns/", corrupts it and then
-  // saves corrupted pattern and image in "../base_directory/corrupted_files/"
+  // Acquires and corrupt a pattern from "../base_directory/patterns/" and saves
+  // the corrupted pattern and image in "../base_directory/corrupted_files/"
   void corrupt_pattern(std::filesystem::path const& name) const;
 };
 
