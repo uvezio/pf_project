@@ -8,6 +8,16 @@
 
 namespace nn {
 
+// Free functions useful to manage symmetric N * N matrices with null diagonal
+// stored in vectors sized N * (N - 1) / 2
+
+std::size_t matrix_to_vector_index(std::size_t i, std::size_t j, std::size_t N);
+
+void increment_ij(std::size_t& i, std::size_t& j, std::size_t N);
+
+double compute_weight_ij(std::size_t i, std::size_t j, std::size_t N,
+                         std::vector<std::vector<int>> const& patterns);
+
 class Weight_Matrix
 {
  private:
@@ -23,14 +33,6 @@ class Weight_Matrix
   const std::vector<double>& weights() const;
 
   std::size_t neurons() const;
-
-  // Not necessary but useful in testing
-  std::size_t matrix_to_vector_index(std::size_t i, std::size_t j) const;
-
-  void increment_ij(std::size_t& i, std::size_t& j) const;
-
-  double compute_weight_ij(std::size_t i, std::size_t j,
-                           std::vector<std::vector<int>> const& patterns) const;
 
   void fill(std::vector<std::vector<int>> const& patterns, std::size_t neurons);
 

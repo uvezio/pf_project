@@ -66,7 +66,7 @@ if (BUILD_TESTING)
   target_link_libraries(training.t PRIVATE sfml-graphics)
   add_test(NAME training.t COMMAND training.t)
 
-  add_executable(recall.t tests/src/recall.test.cpp src/recall.cpp src/pattern.cpp)
+  add_executable(recall.t tests/src/recall.test.cpp src/recall.cpp src/weight_matrix.cpp src/pattern.cpp)
   target_link_libraries(recall.t PRIVATE sfml-graphics)
   add_test(NAME recall.t COMMAND recall.t)
 

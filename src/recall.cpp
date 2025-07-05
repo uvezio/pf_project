@@ -3,12 +3,36 @@
 // This path is the only one relative to "recall.cpp"
 #include "../include/recall.hpp"
 
+#include <algorithm>
 #include <cassert>
-#include <random>
+#include <numeric>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace nn {
+
+int hopfield_rule(std::size_t index, std::vector<int> const& pattern_t0,
+                  std::vector<double> const& weights)
+{
+  std::size_t j{0};
+  auto new_value = std::accumulate(
+      pattern_t0.begin(), pattern_t0.end(), 0,
+      [&j, index, &weights](double sum, int value) {
+        ++j;
+        double j_addend;
+        if (j != index) {
+          j_addend = weights[matrix_to_vector_index(index, j, 4096)] * value;
+        } else {
+          j_addend = 0;
+        };
+        return sum + j_addend;
+      });
+
+  auto value_t1 = (new_value >= 0) ? +1 : -1;
+
+  return value_t1;
+}
 
 void Recall::validate_weight_matrix_directory_() const
 {
@@ -90,7 +114,11 @@ void Recall::configure_corrupted_directory_() const
 
 // base_directory can only be "" or "tests/"
 Recall::Recall(std::filesystem::path const& base_directory)
-    : weight_matrix_directory_{"../" + base_directory.string()
+    : weight_matrix_{}
+    , original_pattern_{}
+    , noisy_pattern_{}
+    , cut_pattern_{}
+    , weight_matrix_directory_{"../" + base_directory.string()
                                + "weight_matrix/"}
     , patterns_directory_{"../" + base_directory.string() + "patterns/"}
     , corrupted_directory_{"../" + base_directory.string() + "corrupted_files/"}
@@ -98,6 +126,15 @@ Recall::Recall(std::filesystem::path const& base_directory)
   validate_weight_matrix_directory_();
   validate_patterns_directory_();
   configure_corrupted_directory_();
+
+  weight_matrix_.load_from_file(weight_matrix_directory_, "weight_matrix.txt",
+                                4096);
+  assert(weight_matrix_.neurons() == 4096);
+  assert(weight_matrix_.weights().size() == 8'386'560);
+
+  assert(original_pattern_.size() == 0);
+  assert(noisy_pattern_.size() == 0);
+  assert(cut_pattern_.size() == 0);
 
   assert(std::filesystem::exists(weight_matrix_directory_.string()
                                  + "weight_matrix.txt"));
@@ -111,7 +148,27 @@ Recall::Recall()
     : Recall::Recall("")
 {}
 
-void Recall::corrupt_pattern(std::filesystem::path const& name) const
+const Weight_Matrix& Recall::weight_matrix() const
+{
+  return weight_matrix_;
+}
+
+const Pattern& Recall::original_pattern() const
+{
+  return original_pattern_;
+}
+
+const Pattern& Recall::noisy_pattern() const
+{
+  return noisy_pattern_;
+}
+
+const Pattern& Recall::cut_pattern() const
+{
+  return cut_pattern_;
+}
+
+void Recall::corrupt_pattern(std::filesystem::path const& name)
 {
   std::filesystem::path path{patterns_directory_};
   path.replace_filename(name);
@@ -119,21 +176,56 @@ void Recall::corrupt_pattern(std::filesystem::path const& name) const
   assert(std::filesystem::is_regular_file(path));
   assert(path.extension() == ".txt");
 
-  Pattern pattern;
-  pattern.load_from_file(patterns_directory_, name, 4096);
-  assert(pattern.size() == 4096);
+  original_pattern_.load_from_file(patterns_directory_, name, 4096);
+  assert(original_pattern_.size() == 4096);
+  assert(std::all_of(original_pattern_.pattern().begin(),
+                     original_pattern_.pattern().end(),
+                     [](int value) { return value == +1 || value == -1; }));
 
-  auto noisy = pattern;
-  noisy.add_noise(0.08, 4096);
+  noisy_pattern_ = original_pattern_;
+  noisy_pattern_.add_noise(0.08, 4096);
+  assert(noisy_pattern_.size() == 4096);
+  assert(std::all_of(noisy_pattern_.pattern().begin(),
+                     noisy_pattern_.pattern().end(),
+                     [](int value) { return value == +1 || value == -1; }));
+
   auto noisy_name = name.filename().replace_extension(".noise.txt");
-  noisy.save_to_file(corrupted_directory_, noisy_name, 4096);
-  noisy.create_image(corrupted_directory_, noisy_name, 64, 64);
+  noisy_pattern_.save_to_file(corrupted_directory_, noisy_name, 4096);
+  noisy_pattern_.create_image(corrupted_directory_, noisy_name, 64, 64);
 
-  auto incomplete = pattern;
-  incomplete.cut(-1, 34, 58, 11, 35, 64, 64);
+  cut_pattern_ = original_pattern_;
+  cut_pattern_.cut(-1, 34, 58, 11, 35, 64, 64);
+  assert(noisy_pattern_.size() == 4096);
+  assert(std::all_of(cut_pattern_.pattern().begin(),
+                     cut_pattern_.pattern().end(),
+                     [](int value) { return value == +1 || value == -1; }));
+
   auto cut_name = name.filename().replace_extension(".cut.txt");
-  incomplete.save_to_file(corrupted_directory_, cut_name, 4096);
-  incomplete.create_image(corrupted_directory_, cut_name, 64, 64);
+  cut_pattern_.save_to_file(corrupted_directory_, cut_name, 4096);
+  cut_pattern_.create_image(corrupted_directory_, cut_name, 64, 64);
+}
+
+void Recall::network_update_dynamics()
+{
+  auto pattern       = noisy_pattern_.pattern();
+  auto const weights = weight_matrix_.weights();
+
+  std::vector<int> pattern_t0;
+  bool has_converged{false};
+  std::size_t index{0};
+  while (!has_converged) {
+    ++index;
+    has_converged   = true;
+    pattern_t0 = pattern;
+    std::transform(pattern_t0.begin(), pattern_t0.end(), pattern.begin(),
+                   [&index, &weights, &has_converged, &pattern_t0](int value) {
+                     auto new_value = hopfield_rule(index, pattern_t0, weights);
+                     if (has_converged == true && new_value != value) {
+                       has_converged = false;
+                     }
+                     return new_value;
+                   });
+  }
 }
 
 } // namespace nn

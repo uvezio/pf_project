@@ -89,10 +89,10 @@ TEST_CASE("Testing the Recall class on invalid directories")
   }
 }
 
-TEST_CASE("Testing corrupt_patterns()")
-{
-  nn::Recall recall{"tests/"};
+nn::Recall recall{"tests/"};
 
+TEST_CASE("Testing corrupt_pattern()")
+{
   SUBCASE("Acquiring an under-sized pattern \"(under_sized.txt)\"")
   {
     std::ofstream undersized{"../tests/patterns/under_sized.txt"};
@@ -109,12 +109,16 @@ TEST_CASE("Testing corrupt_patterns()")
     REQUIRE(!std::filesystem::exists("../tests/patterns/under_sized.txt"));
   }
 
-  SUBCASE("Acquiring all the patterns in the directory and saving them")
+  SUBCASE("Corrupting and saving all the patterns in the directory")
   {
     for (int i{1}; i != 5; ++i) {
       std::filesystem::path name{std::to_string(i) + ".txt"};
 
       recall.corrupt_pattern(name);
+
+      REQUIRE(recall.original_pattern().size() == 4096);
+      REQUIRE(recall.noisy_pattern().size() == 4096);
+      REQUIRE(recall.cut_pattern().size() == 4096);
 
       nn::Pattern corrupted_pattern;
       sf::Image corrupted_image;
@@ -148,4 +152,10 @@ TEST_CASE("Testing corrupt_patterns()")
       CHECK(corrupted_image.getSize().y == 64);
     }
   }
+}
+
+TEST_CASE("")
+{
+  REQUIRE(recall.weight_matrix().neurons() == 4096);
+  REQUIRE(recall.weight_matrix().weights().size() == 8'386'560);
 }

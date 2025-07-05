@@ -11,9 +11,17 @@
 
 namespace nn {
 
+  int hopfield_rule(std::size_t index, std::vector<int> const& pattern_t0,
+                     std::vector<double> const& weights);
+
+
 class Recall
 {
  private:
+  Weight_Matrix weight_matrix_;
+  Pattern original_pattern_;
+  Pattern noisy_pattern_;
+  Pattern cut_pattern_;
   const std::filesystem::path weight_matrix_directory_;
   const std::filesystem::path patterns_directory_;
   const std::filesystem::path corrupted_directory_;
@@ -33,9 +41,19 @@ class Recall
 
   Recall();
 
+  const Weight_Matrix& weight_matrix() const;
+
+  const Pattern& original_pattern() const;
+
+  const Pattern& noisy_pattern() const;
+
+  const Pattern& cut_pattern() const;
+
   // Acquires and corrupt a pattern from "../base_directory/patterns/" and saves
   // the corrupted pattern and image in "../base_directory/corrupted_files/"
-  void corrupt_pattern(std::filesystem::path const& name) const;
+  void corrupt_pattern(std::filesystem::path const& name);
+
+  void network_update_dynamics();
 };
 
 } // namespace nn

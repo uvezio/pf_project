@@ -101,15 +101,15 @@ TEST_CASE("Testing acquire_and_save_weight_matrix()")
                                  4096);
     CHECK(weight_matrix.weights().size() == 4096 * 4095 / 2);
 
-    CHECK(weight_matrix.weights()[weight_matrix.matrix_to_vector_index(1, 12)]
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(1, 12, 4096)]
           == doctest::Approx(0.000488281).epsilon(0.000000001));
-    CHECK(weight_matrix.weights()[weight_matrix.matrix_to_vector_index(2, 5)]
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(2, 5, 4096)]
           == doctest::Approx(0.000976562).epsilon(0.000000001));
     CHECK(weight_matrix
-              .weights()[weight_matrix.matrix_to_vector_index(4094, 4095)]
+              .weights()[nn::matrix_to_vector_index(4094, 4095, 4096)]
           == doctest::Approx(0.000976562).epsilon(0.000000001));
     CHECK(weight_matrix
-              .weights()[weight_matrix.matrix_to_vector_index(4095, 4096)]
+              .weights()[nn::matrix_to_vector_index(4095, 4096, 4096)]
           == doctest::Approx(0.000976562).epsilon(0.000000001));
   }
 }
