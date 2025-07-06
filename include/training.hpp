@@ -18,7 +18,7 @@ class Training
   const std::filesystem::path weight_matrix_directory_;
 
   void validate_patterns_directory_() const;
-  void configure_output_directory_() const;
+  void configure_weight_matrix_directory_() const;
 
  public:
   /*

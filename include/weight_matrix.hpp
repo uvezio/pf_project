@@ -22,6 +22,9 @@ class Weight_Matrix
 {
  private:
   const std::size_t neurons_;
+
+  // Since weight matrix is symmetric neurons_ * neurons_ with null diagonal
+  // weights_.size() == neurons_ * (neurons_ - 1) / 2 after the call to fill()
   std::vector<double> weights_;
 
  public:
@@ -33,6 +36,8 @@ class Weight_Matrix
   const std::vector<double>& weights() const;
 
   std::size_t neurons() const;
+
+  double at(std::size_t i, std::size_t j) const;
 
   void fill(std::vector<std::vector<int>> const& patterns, std::size_t neurons);
 

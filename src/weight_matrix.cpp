@@ -23,7 +23,8 @@ std::size_t matrix_to_vector_index(std::size_t i, std::size_t j, std::size_t N)
   } else if (i > j) {
     return matrix_to_vector_index(j, i, N);
   } else {
-    throw std::runtime_error("");
+    throw std::runtime_error(
+        "A vector index relative to the given matrix index does not exist.");
   }
 }
 
@@ -38,7 +39,7 @@ void increment_ij(std::size_t& i, std::size_t& j, std::size_t N)
     ++i;
     j = i + 1;
   } else {
-    throw std::runtime_error("");
+    throw std::runtime_error("Index i or j out of bounds.");
   }
 
   assert(i >= 1 && i <= N);
@@ -91,6 +92,20 @@ const std::vector<double>& Weight_Matrix::weights() const
 std::size_t Weight_Matrix::neurons() const
 {
   return neurons_;
+}
+
+double Weight_Matrix::at(std::size_t i, std::size_t j) const
+{
+  assert(weights_.size() == neurons_ * (neurons_ - 1) / 2);
+
+  assert(i >= 1 && i <= neurons_);
+  assert(j >= 1 && j <= neurons_);
+
+  if (i != j) {
+    return weights_[matrix_to_vector_index(i, j, neurons_)];
+  } else {
+    return 0.;
+  }
 }
 
 void Weight_Matrix::fill(std::vector<std::vector<int>> const& patterns,

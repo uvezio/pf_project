@@ -41,7 +41,7 @@ void Training::validate_patterns_directory_() const
   }
 }
 
-void Training::configure_output_directory_() const
+void Training::configure_weight_matrix_directory_() const
 {
   if (!std::filesystem::exists(weight_matrix_directory_)) {
     std::filesystem::create_directory(weight_matrix_directory_);
@@ -68,7 +68,7 @@ Training::Training(std::filesystem::path const& base_directory)
   assert(weight_matrix_.neurons() == 4096);
 
   validate_patterns_directory_();
-  configure_output_directory_();
+  configure_weight_matrix_directory_();
 
   assert(std::filesystem::is_directory(patterns_directory_)
          && !std::filesystem::is_empty(patterns_directory_));

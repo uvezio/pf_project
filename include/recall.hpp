@@ -11,9 +11,8 @@
 
 namespace nn {
 
-  int hopfield_rule(std::size_t index, std::vector<int> const& pattern_t0,
-                     std::vector<double> const& weights);
-
+int hopfield_rule(std::size_t index, std::vector<int> const& pattern,
+                  std::vector<double> const& weights);
 
 class Recall
 {

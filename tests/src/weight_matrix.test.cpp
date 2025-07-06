@@ -112,27 +112,19 @@ TEST_CASE("Testing the fill method")
     weight_matrix.fill(patterns, 5);
     REQUIRE(weight_matrix.weights().size() == 10);
 
-    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(1, 2, 5)]
-            == .4);
-    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(1, 5, 5)]
-            == .4);
+    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(1, 2, 5)] == .4);
+    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(1, 5, 5)] == .4);
     REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(2, 5, 5)]
             == -.4);
-    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(3, 5, 5)]
-            == 0.);
+    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(3, 5, 5)] == 0.);
     REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(2, 4, 5)]
             == -.4);
-    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(4, 5, 5)]
-            == .4);
+    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(4, 5, 5)] == .4);
 
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(1, 3, 5)]
-          == 0.);
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(1, 4, 5)]
-          == .4);
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(2, 3, 5)]
-          == 0.);
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(3, 4, 5)]
-          == .8);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(1, 3, 5)] == 0.);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(1, 4, 5)] == .4);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(2, 3, 5)] == 0.);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(3, 4, 5)] == .8);
   }
 
   SUBCASE("Four neurons and two patterns")
@@ -149,10 +141,8 @@ TEST_CASE("Testing the fill method")
             == -.5);
     REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(1, 3, 4)]
             == -.5);
-    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(1, 4, 4)]
-            == .5);
-    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(2, 3, 4)]
-            == .5);
+    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(1, 4, 4)] == .5);
+    REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(2, 3, 4)] == .5);
     REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(2, 4, 4)]
             == -.5);
     REQUIRE(weight_matrix.weights()[nn::matrix_to_vector_index(3, 4, 4)]
@@ -174,19 +164,43 @@ TEST_CASE("Testing the fill method")
     weight_matrix.fill(patterns_, 4);
     REQUIRE(weight_matrix.weights().size() == 6);
 
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(2, 3, 4)]
-          == -.5);
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(2, 4, 4)]
-          == -.5);
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(2, 1, 4)]
-          == .5);
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(3, 4, 4)]
-          == .5);
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(3, 1, 4)]
-          == -.5);
-    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(4, 1, 4)]
-          == -.5);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(2, 3, 4)] == -.5);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(2, 4, 4)] == -.5);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(2, 1, 4)] == .5);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(3, 4, 4)] == .5);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(3, 1, 4)] == -.5);
+    CHECK(weight_matrix.weights()[nn::matrix_to_vector_index(4, 1, 4)] == -.5);
   }
+}
+
+TEST_CASE("Testing the at method")
+{
+  nn::Weight_Matrix weight_matrix(4);
+  REQUIRE(weight_matrix.weights().size() == 0);
+
+  std::vector<std::vector<int>> patterns{{-1, 1, 1, -1}, {1, -1, -1, 1}};
+
+  weight_matrix.fill(patterns, 4);
+  REQUIRE(weight_matrix.weights().size() == 6);
+
+  CHECK(weight_matrix.at(1, 2) == -.5);
+  CHECK(weight_matrix.at(1, 3) == -.5);
+  CHECK(weight_matrix.at(1, 4) == .5);
+  CHECK(weight_matrix.at(2, 3) == .5);
+  CHECK(weight_matrix.at(2, 4) == -.5);
+  CHECK(weight_matrix.at(3, 4) == -.5);
+
+  CHECK(weight_matrix.at(2, 1) == -.5);
+  CHECK(weight_matrix.at(3, 1) == -.5);
+  CHECK(weight_matrix.at(4, 1) == .5);
+  CHECK(weight_matrix.at(3, 2) == .5);
+  CHECK(weight_matrix.at(4, 2) == -.5);
+  CHECK(weight_matrix.at(4, 3) == -.5);
+
+  CHECK(weight_matrix.at(1, 1) == 0.);
+  CHECK(weight_matrix.at(2, 2) == 0.);
+  CHECK(weight_matrix.at(3, 3) == 0.);
+  CHECK(weight_matrix.at(4, 4) == 0.);
 }
 
 TEST_CASE("Testing input and output")

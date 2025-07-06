@@ -3,6 +3,7 @@
 // This path is the only one relative to "recall.cpp"
 #include "../include/recall.hpp"
 
+#include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cassert>
 #include <numeric>
@@ -12,26 +13,24 @@
 
 namespace nn {
 
-int hopfield_rule(std::size_t index, std::vector<int> const& pattern_t0,
-                  std::vector<double> const& weights)
+int hopfield_rule(std::size_t index, std::vector<int> const& pattern,
+                  Weight_Matrix const& weight_matrix)
 {
+  assert(index >= 1 && index <= weight_matrix.neurons());
+  assert(weight_matrix.weights().size()
+         == weight_matrix.neurons() * (weight_matrix.neurons() - 1) / 2);
+
   std::size_t j{0};
-  auto new_value = std::accumulate(
-      pattern_t0.begin(), pattern_t0.end(), 0,
-      [&j, index, &weights](double sum, int value) {
-        ++j;
-        double j_addend;
-        if (j != index) {
-          j_addend = weights[matrix_to_vector_index(index, j, 4096)] * value;
-        } else {
-          j_addend = 0;
-        };
-        return sum + j_addend;
-      });
+  auto weighted_sum =
+      std::accumulate(pattern.begin(), pattern.end(), 0.,
+                      [index, &j, &weight_matrix](double sum, int value) {
+                        ++j;
+                        return sum + weight_matrix.at(index, j) * value;
+                      });
 
-  auto value_t1 = (new_value >= 0) ? +1 : -1;
+  auto new_value = (weighted_sum >= 0) ? +1 : -1;
 
-  return value_t1;
+  return new_value;
 }
 
 void Recall::validate_weight_matrix_directory_() const
@@ -207,24 +206,71 @@ void Recall::corrupt_pattern(std::filesystem::path const& name)
 
 void Recall::network_update_dynamics()
 {
-  auto pattern       = noisy_pattern_.pattern();
-  auto const weights = weight_matrix_.weights();
+  assert(weight_matrix_.neurons() == 4096);
+  assert(weight_matrix_.weights().size() == 8'386'560);
+
+  auto pattern = noisy_pattern_.pattern();
+  assert(pattern.size() == 4096);
+
+  sf::RenderWindow window(sf::VideoMode(64, 64), "Network update dynamics");
+  window.setFramerateLimit(60);
+
+  sf::Texture texture;
+  texture.create(64, 64);
+  sf::Sprite sprite(texture);
+  sprite.setScale(8., 8.);
+
+  std::vector<sf::Uint8> pixels;
+  //std::generate_n(std::back_inserter(pixels), 3 * pattern.size(), []() { ; });
+
+  bool has_converged{false};
+
+  while (!has_converged || window.isOpen()) {
+    sf::Event event;
+    while (window.pollEvent(event)) {
+      if (event.type == sf::Event::Closed) {
+        window.close();
+      }
+    }
+
+    for (std::size_t i{0}; i != pattern.size(); ++i) {
+    }
+
+    texture.update(pixels.data());
+
+    window.clear(sf::Color::Black);
+    window.draw(sprite);
+    window.display();
+  }
 
   std::vector<int> pattern_t0;
-  bool has_converged{false};
   std::size_t index{0};
   while (!has_converged) {
     ++index;
-    has_converged   = true;
-    pattern_t0 = pattern;
+    has_converged = true;
+    pattern_t0    = pattern;
     std::transform(pattern_t0.begin(), pattern_t0.end(), pattern.begin(),
-                   [&index, &weights, &has_converged, &pattern_t0](int value) {
-                     auto new_value = hopfield_rule(index, pattern_t0, weights);
+                   [&index, this, &has_converged, &pattern_t0](int value) {
+                     auto new_value =
+                         hopfield_rule(index, pattern_t0, weight_matrix_);
                      if (has_converged == true && new_value != value) {
                        has_converged = false;
                      }
                      return new_value;
                    });
+
+    /*sf::Image image;
+    image.create(64, 64);
+
+    for (unsigned int y{0}; y < 64; ++y) {
+      for (unsigned int x{0}; x < 64; ++x) {
+        auto index = y * 64 + x;
+        auto value = pattern[index];
+        assert(value == +1 || value == -1);
+        auto color = value == +1 ? sf::Color::White : sf::Color::Black;
+        image.setPixel(x, y, color);
+      }
+    }*/
   }
 }
 
