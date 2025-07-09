@@ -45,6 +45,9 @@ target_link_libraries(acquisition PRIVATE sfml-graphics)
 add_executable(training main/main_training.cpp src/training.cpp src/weight_matrix.cpp src/pattern.cpp)
 target_link_libraries(training PRIVATE sfml-graphics)
 
+add_executable(recall main/main_recall.cpp src/recall.cpp src/weight_matrix.cpp src/pattern.cpp)
+target_link_libraries(recall PRIVATE sfml-graphics)
+
 # il testing e' abilitato di default
 # per disabilitarlo, passare -DBUILD_TESTING=OFF a cmake durante la fase di configurazione
 if (BUILD_TESTING)

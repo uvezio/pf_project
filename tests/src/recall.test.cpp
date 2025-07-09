@@ -210,12 +210,14 @@ TEST_CASE("Testing corrupt_pattern()")
   }
 }
 
+std::vector<double> energies{-2075.32, -2261.52, -2071.11, -2257.45};
+
 TEST_CASE("Testing network_update_dynamics()")
 {
   REQUIRE(recall.weight_matrix().neurons() == 4096);
   REQUIRE(recall.weight_matrix().weights().size() == 8'386'560);
 
-  for (int i{1}; i != 5; ++i) {
+  for (std::size_t i{1}; i != 5; ++i) {
     std::filesystem::path name{std::to_string(i) + ".txt"};
 
     recall.corrupt_pattern(name);
@@ -223,6 +225,11 @@ TEST_CASE("Testing network_update_dynamics()")
     REQUIRE(recall.original_pattern().size() == 4096);
     REQUIRE(recall.noisy_pattern().size() == 4096);
     REQUIRE(recall.cut_pattern().size() == 4096);
+
+    auto original_energy = nn::hopfield_energy(
+        recall.original_pattern().pattern(), recall.weight_matrix());
+
+    CHECK(original_energy == doctest::Approx(energies[i - 1]).epsilon(0.01));
 
     recall.clear_state();
 
@@ -233,5 +240,24 @@ TEST_CASE("Testing network_update_dynamics()")
 
     CHECK(recall.current_state().size() == 4096);
     CHECK(recall.current_iteration() > 0);
+
+    auto final_energy =
+        nn::hopfield_energy(recall.current_state(), recall.weight_matrix());
+
+    // If the network converged to a pattern different from the original one,
+    // the following check could fail.
+    CHECK(final_energy >= original_energy);
+  }
+}
+
+TEST_CASE("Testing the correct saving of the recomposed images")
+{
+  for (int i{1}; i != 5; ++i) {
+    recall.clear_state();
+
+    std::filesystem::path name{std::to_string(i) + ".txt"};
+    recall.corrupt_pattern(name);
+    recall.network_update_dynamics();
+    recall.save_current_state(name);
   }
 }

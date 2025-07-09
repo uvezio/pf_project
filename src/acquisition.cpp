@@ -241,7 +241,7 @@ void Acquisition::save_binarized_images() const
     Pattern pattern;
     pattern.load_from_file(patterns_directory_, file.path().filename(),
                            64 * 64);
-    pattern.create_image(binarized_directory_, file.path().filename(), 64, 64);
+    pattern.save_image(binarized_directory_, file.path().filename(), 64, 64);
   }
 }
 

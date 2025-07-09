@@ -1,5 +1,5 @@
 // All relative paths are relative to the "build/" directory
-// These two paths are the only ones relative to "recall.cpp"
+
 // This path is the only one relative to "recall.cpp"
 #include "../include/recall.hpp"
 
@@ -254,7 +254,7 @@ void Recall::corrupt_pattern(std::filesystem::path const& name)
 
   auto noisy_name = name.filename().replace_extension(".noise.txt");
   noisy_pattern_.save_to_file(corrupted_directory_, noisy_name, 4096);
-  noisy_pattern_.create_image(corrupted_directory_, noisy_name, 64, 64);
+  noisy_pattern_.save_image(corrupted_directory_, noisy_name, 64, 64);
 
   cut_pattern_ = original_pattern_;
   cut_pattern_.cut(-1, 34, 58, 11, 35, 64, 64);
@@ -265,7 +265,7 @@ void Recall::corrupt_pattern(std::filesystem::path const& name)
 
   auto cut_name = name.filename().replace_extension(".cut.txt");
   cut_pattern_.save_to_file(corrupted_directory_, cut_name, 4096);
-  cut_pattern_.create_image(corrupted_directory_, cut_name, 64, 64);
+  cut_pattern_.save_image(corrupted_directory_, cut_name, 64, 64);
 }
 
 bool Recall::single_network_update()
@@ -323,12 +323,49 @@ void Recall::network_update_dynamics()
   auto current_energy = hopfield_energy(current_state_, weight_matrix_);
   std::cout << "Initial energy: " << current_energy << '\n';
 
+  float scale = 3.f;
+  sf::RenderWindow window(
+      sf::VideoMode(2 * 64 * static_cast<unsigned int>(scale),
+                    64 * static_cast<unsigned int>(scale)),
+      "Network update dynamics");
+
+  auto starting_image = create_image(64, 64, current_state_);
+  auto current_image  = starting_image;
+
+  assert(starting_image.getSize().x == 64 && starting_image.getSize().y == 64);
+  assert(current_image.getSize().x == 64 && current_image.getSize().y == 64);
+
+  sf::Texture starting_texture, current_texture;
+
+  starting_texture.loadFromImage(starting_image);
+  sf::Sprite starting_sprite(starting_texture);
+  starting_sprite.setScale(scale, scale);
+  starting_sprite.setPosition(0, 0);
+
+  current_texture.loadFromImage(current_image);
+  sf::Sprite current_sprite(current_texture);
+  current_sprite.setScale(scale, scale);
+  current_sprite.setPosition(64 * scale, 0);
+
+  window.clear();
+  window.draw(starting_sprite);
+  window.draw(current_sprite);
+  window.display();
+
   assert(current_iteration_ == 0);
 
   while (single_network_update()) {
     current_energy = hopfield_energy(current_state_, weight_matrix_);
     std::cout << "Iteration " << current_iteration_
               << ". Current energy: " << current_energy << '\n';
+
+    current_image = create_image(64, 64, current_state_);
+    current_texture.update(current_image);
+
+    window.clear();
+    window.draw(starting_sprite);
+    window.draw(current_sprite);
+    window.display();
   }
 
   assert(!single_network_update());
@@ -336,84 +373,21 @@ void Recall::network_update_dynamics()
 
   if (current_state_ == original_pattern_.pattern()) {
     assert(current_energy == original_energy);
-    std::cout << "The original pattern has been recomposed." << '\n';
+    std::cout << "The original pattern has been restored." << '\n';
   } else {
-    std::cout << "The original pattern has not been recomposed." << '\n';
+    std::cout << "The original pattern has not been restored." << '\n';
   }
 }
 
-/*void Recall::network_update_dynamics()
+void Recall::save_current_state(std::filesystem::path const& original_name) const
 {
-  sf::Image starting_image, updated_image;
-  starting_image.create(64, 64);
-  updated_image.create(64, 64);
+  assert(std::filesystem::is_directory(corrupted_directory_));
 
-  unsigned int x{0}, y{0};
-
-  for (auto value : noisy_pattern_.pattern()) {
-    auto color = compute_color(value);
-    starting_image.setPixel(x, y, color);
-    updated_image.setPixel(x, y, color);
-
-    if (x + 1 == 64) {
-      x = 0;
-      ++y;
-    } else {
-      ++x;
-    }
-  }
-  assert(x == 0 && y == 64);
-  assert(starting_image.getSize().x == 64 && starting_image.getSize().y == 64);
-  assert(updated_image.getSize().x == 64 && updated_image.getSize().y == 64);
-
-  // float scale = 5.f;
-  sf::RenderWindow window(sf::VideoMode(2 * 64, 64), "Network update dynamics");
-
-  sf::Texture starting_texture, updated_texture;
-
-  starting_texture.loadFromImage(starting_image);
-  sf::Sprite starting_sprite(starting_texture);
-  // starting_sprite.setScale(scale, scale);
-  starting_sprite.setPosition(0, 0);
-
-  updated_texture.loadFromImage(updated_image);
-  sf::Sprite updated_sprite(updated_texture);
-  // updated_sprite.setScale(scale, scale);
-  updated_sprite.setPosition(63, 0);
-
-  window.clear();
-  window.draw(starting_sprite);
-  window.draw(updated_sprite);
-  window.display();
-
-  while (window.isOpen()) {
-    sf::Event event;
-    while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed) {
-        window.close();
-      }
-    }
-
-    x = 0;
-    y = 0;
-
-    for (auto current_value : current_state_) {
-      updated_image.setPixel(x, y, compute_color(new_value));
-      if (x + 1 == 64) {
-        x = 0;
-        ++y;
-      } else {
-        ++x;
-      }
-    }
-
-    updated_texture.update(updated_image);
-
-    window.clear();
-    window.draw(starting_sprite);
-    window.draw(updated_sprite);
-    window.display();
-  }
-}*/
+  auto name = original_name;
+  name.replace_extension(".restored.txt");
+  Pattern pattern{current_state_};
+  pattern.save_to_file(corrupted_directory_, name, 4096);
+  pattern.save_image(corrupted_directory_, name, 64, 64);
+}
 
 } // namespace nn

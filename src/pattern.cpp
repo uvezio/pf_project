@@ -18,11 +18,36 @@ sf::Color compute_color(int value)
   return value == +1 ? sf::Color::White : sf::Color::Black;
 }
 
-Pattern::Pattern()
-    : pattern_{}
+sf::Image create_image(unsigned int width, unsigned int height,
+                       std::vector<int> const& pattern)
 {
-  assert(pattern_.size() == 0);
+  assert(pattern.size() == width * height);
+
+  sf::Image image;
+  image.create(width, height);
+
+  for (unsigned int y{0}; y < height; ++y) {
+    for (unsigned int x{0}; x < width; ++x) {
+      auto color = compute_color(pattern[y * width + x]);
+      image.setPixel(x, y, color);
+    }
+  }
+
+  assert(image.getSize().x == width);
+  assert(image.getSize().y == height);
+
+  return image;
 }
+
+Pattern::Pattern(std::vector<int> pattern)
+    : pattern_{pattern}
+{
+  assert(pattern_.size() == pattern.size());
+}
+
+Pattern::Pattern()
+    : Pattern::Pattern(std::vector<int>{})
+{}
 
 const std::vector<int>& Pattern::pattern() const
 {
@@ -125,9 +150,9 @@ void Pattern::load_from_file(std::filesystem::path const& patterns_directory,
   assert(pattern_.size() == size);
 }
 
-void Pattern::create_image(std::filesystem::path const& binarized_directory,
-                           std::filesystem::path const& pattern_name,
-                           unsigned int width, unsigned int height) const
+void Pattern::save_image(std::filesystem::path const& binarized_directory,
+                         std::filesystem::path const& pattern_name,
+                         unsigned int width, unsigned int height) const
 {
   assert(std::filesystem::is_directory(binarized_directory));
 
@@ -138,15 +163,7 @@ void Pattern::create_image(std::filesystem::path const& binarized_directory,
 
   assert(pattern_.size() == width * height);
 
-  sf::Image image;
-  image.create(width, height);
-
-  for (unsigned int y{0}; y < height; ++y) {
-    for (unsigned int x{0}; x < width; ++x) {
-      auto color = compute_color(pattern_[y * width + x]);
-      image.setPixel(x, y, color);
-    }
-  }
+  auto image = create_image(width, height, pattern_);
 
   if (!image.saveToFile(path)) {
     throw std::runtime_error("Image \"" + path.string()

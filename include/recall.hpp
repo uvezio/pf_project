@@ -3,7 +3,7 @@
 #ifndef NN_RECALL_HPP
 #define NN_RECALL_HPP
 
-// This path is the only one relative to "recall.hpp"
+// These two paths are the only ones relative to "recall.hpp"
 #include "pattern.hpp"
 #include "weight_matrix.hpp"
 
@@ -64,16 +64,23 @@ class Recall
   const std::vector<int>& current_state() const;
 
   std::size_t current_iteration() const;
-  
+
   void clear_state();
 
   // Acquires and corrupt a pattern from "../base_directory/patterns/" and saves
-  // the corrupted pattern and image in "../base_directory/corrupted_files/"
+  // the corrupted pattern and image in "../base_directory/corrupted_files/";
+  // sets the class state in order to call network_update_dynamics().
   void corrupt_pattern(std::filesystem::path const& name);
 
+  // Applies Hopefield rule to update the current state
   bool single_network_update();
 
+  // Updates the current state until it converges to a stable state
   void network_update_dynamics();
+
+  // Saves the current state (pattern and image) in
+  // "../base_directory/corrupted_files/"
+  void save_current_state(std::filesystem::path const& original_name) const;
 };
 
 } // namespace nn
