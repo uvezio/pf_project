@@ -29,7 +29,8 @@ TEST_CASE("Testing the conversion from int to sf::Color")
   CHECK(nn::compute_color(-1) == sf::Color::Black);
 }
 
-TEST_CASE("Testing construction") {
+TEST_CASE("Testing construction")
+{
   std::vector<int> v{1, 2, 1, -4, -33, 100};
 
   nn::Pattern pattern{v};
@@ -46,8 +47,6 @@ TEST_CASE("Testing construction") {
 TEST_CASE("Testing the add method")
 {
   nn::Pattern pattern{};
-
-  // nn::Pattern::set_directory("../tests/patterns/");
 
   REQUIRE(pattern.size() == 0);
 

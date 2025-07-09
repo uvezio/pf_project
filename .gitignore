@@ -1,3 +1,13 @@
+.vscode/
+
 build/
 
-.vscode/
+corrupted_files/
+images/binarized_images/
+patterns/
+weight_matrix/
+
+tests/corrupted_files/*
+tests/images/binarized_images/*
+tests/patterns/*
+weight_matrix/*

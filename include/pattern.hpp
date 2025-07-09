@@ -21,7 +21,7 @@ class Pattern
 
  public:
   Pattern(std::vector<int> pattern);
-  
+
   Pattern();
 
   const std::vector<int>& pattern() const;
