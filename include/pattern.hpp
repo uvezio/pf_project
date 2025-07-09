@@ -3,10 +3,13 @@
 #ifndef NN_PATTERN_HPP
 #define NN_PATTERN_HPP
 
+#include <SFML/Graphics.hpp>
 #include <filesystem>
 #include <vector>
 
 namespace nn {
+
+sf::Color compute_color(int value);
 
 class Pattern
 {

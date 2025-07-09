@@ -20,9 +20,14 @@
 #include "../../include/pattern.hpp"
 #include "../doctest.h"
 
-#include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <fstream>
+
+TEST_CASE("Testing the conversion from int to sf::Color")
+{
+  CHECK(nn::compute_color(+1) == sf::Color::White);
+  CHECK(nn::compute_color(-1) == sf::Color::Black);
+}
 
 TEST_CASE("Testing the add method")
 {
@@ -167,15 +172,13 @@ TEST_CASE("Testing pattern corruption methods")
   {
     pattern.add_noise(0.3, 10);
     CHECK(pattern.size() == 10);
-    pattern.create_image("../tests/corrupted_files/",
-                         "test.txt", 5, 2);
+    pattern.create_image("../tests/corrupted_files/", "test.txt", 5, 2);
 
     auto p = pattern.pattern();
 
     pattern.add_noise(1., 10);
     CHECK(pattern.size() == 10);
-    pattern.create_image("../tests/corrupted_files/",
-                         "test_.txt", 5, 2);
+    pattern.create_image("../tests/corrupted_files/", "test_.txt", 5, 2);
 
     std::size_t i{0};
     std::all_of(p.begin(), p.end(), [&](int v) {
@@ -187,8 +190,7 @@ TEST_CASE("Testing pattern corruption methods")
   SUBCASE("Cutting pattern")
   {
     pattern.cut(-1, 1, 3, 1, 1, 2, 5);
-    pattern.create_image("../tests/corrupted_files/",
-                         "test.txt", 2, 5);
+    pattern.create_image("../tests/corrupted_files/", "test.txt", 2, 5);
 
     for (unsigned int y{0}; y != 2; ++y) {
       CHECK(pattern.pattern()[y * 2] == -1);

@@ -6,31 +6,73 @@
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 #include <numeric>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 namespace nn {
 
-int hopfield_rule(std::size_t index, std::vector<int> const& pattern,
-                  Weight_Matrix const& weight_matrix)
+int sign(double value)
+{
+  return (value >= 0) ? +1 : -1;
+}
+
+double hopfield_local_field(std::size_t index,
+                            std::vector<int> const& current_state,
+                            Weight_Matrix const& weight_matrix)
 {
   assert(index >= 1 && index <= weight_matrix.neurons());
-  assert(weight_matrix.weights().size()
-         == weight_matrix.neurons() * (weight_matrix.neurons() - 1) / 2);
+  assert(current_state.size() >= index);
 
   std::size_t j{0};
-  auto weighted_sum =
-      std::accumulate(pattern.begin(), pattern.end(), 0.,
+  auto local_field =
+      std::accumulate(current_state.begin(), current_state.end(), 0.,
                       [index, &j, &weight_matrix](double sum, int value) {
                         ++j;
                         return sum + weight_matrix.at(index, j) * value;
                       });
 
-  auto new_value = (weighted_sum >= 0) ? +1 : -1;
+  assert(j == current_state.size());
 
-  return new_value;
+  return local_field;
+}
+
+std::vector<double> hopfield_local_fields(std::vector<int> const& current_state,
+                                          Weight_Matrix const& weight_matrix)
+{
+  assert(weight_matrix.weights().size()
+         == weight_matrix.neurons() * (weight_matrix.neurons() - 1) / 2);
+  assert(current_state.size() == weight_matrix.neurons());
+
+  std::vector<double> local_fields;
+  std::size_t i{0};
+  std::generate_n(
+      std::back_inserter(local_fields), current_state.size(), [&]() {
+        ++i;
+        return hopfield_local_field(i, current_state, weight_matrix);
+      });
+
+  assert(i == current_state.size());
+  assert(local_fields.size() == current_state.size());
+
+  return local_fields;
+}
+
+double hopfield_energy(std::vector<int> const& current_state,
+                       Weight_Matrix const& weight_matrix)
+{
+  assert(weight_matrix.weights().size()
+         == weight_matrix.neurons() * (weight_matrix.neurons() - 1) / 2);
+
+  auto local_fields = hopfield_local_fields(current_state, weight_matrix);
+
+  double energy;
+  energy = std::inner_product(current_state.begin(), current_state.end(),
+                              local_fields.begin(), 0.);
+  energy = -energy / 2;
+
+  return energy;
 }
 
 void Recall::validate_weight_matrix_directory_() const
@@ -117,6 +159,8 @@ Recall::Recall(std::filesystem::path const& base_directory)
     , original_pattern_{}
     , noisy_pattern_{}
     , cut_pattern_{}
+    , current_state_{}
+    , current_iteration_{0}
     , weight_matrix_directory_{"../" + base_directory.string()
                                + "weight_matrix/"}
     , patterns_directory_{"../" + base_directory.string() + "patterns/"}
@@ -132,8 +176,12 @@ Recall::Recall(std::filesystem::path const& base_directory)
   assert(weight_matrix_.weights().size() == 8'386'560);
 
   assert(original_pattern_.size() == 0);
+
   assert(noisy_pattern_.size() == 0);
   assert(cut_pattern_.size() == 0);
+
+  assert(current_state_.size() == 0);
+  assert(current_iteration_ == 0);
 
   assert(std::filesystem::exists(weight_matrix_directory_.string()
                                  + "weight_matrix.txt"));
@@ -167,6 +215,22 @@ const Pattern& Recall::cut_pattern() const
   return cut_pattern_;
 }
 
+const std::vector<int>& Recall::current_state() const
+{
+  return current_state_;
+}
+
+std::size_t Recall::current_iteration() const
+{
+  return current_iteration_;
+}
+
+void Recall::clear_state()
+{
+  current_state_.clear();
+  current_iteration_ = 0;
+}
+
 void Recall::corrupt_pattern(std::filesystem::path const& name)
 {
   std::filesystem::path path{patterns_directory_};
@@ -182,7 +246,7 @@ void Recall::corrupt_pattern(std::filesystem::path const& name)
                      [](int value) { return value == +1 || value == -1; }));
 
   noisy_pattern_ = original_pattern_;
-  noisy_pattern_.add_noise(0.08, 4096);
+  noisy_pattern_.add_noise(0.1, 4096);
   assert(noisy_pattern_.size() == 4096);
   assert(std::all_of(noisy_pattern_.pattern().begin(),
                      noisy_pattern_.pattern().end(),
@@ -194,7 +258,7 @@ void Recall::corrupt_pattern(std::filesystem::path const& name)
 
   cut_pattern_ = original_pattern_;
   cut_pattern_.cut(-1, 34, 58, 11, 35, 64, 64);
-  assert(noisy_pattern_.size() == 4096);
+  assert(cut_pattern_.size() == 4096);
   assert(std::all_of(cut_pattern_.pattern().begin(),
                      cut_pattern_.pattern().end(),
                      [](int value) { return value == +1 || value == -1; }));
@@ -204,28 +268,125 @@ void Recall::corrupt_pattern(std::filesystem::path const& name)
   cut_pattern_.create_image(corrupted_directory_, cut_name, 64, 64);
 }
 
+bool Recall::single_network_update()
+{
+  assert(current_state_.size() == 4096);
+  assert(std::all_of(current_state_.begin(), current_state_.end(),
+                     [](int value) { return value == +1 || value == -1; }));
+
+  std::vector<int> new_state;
+  std::size_t i{0};
+  std::generate_n(std::back_inserter(new_state), current_state_.size(), [&]() {
+    ++i;
+    auto local_field = hopfield_local_field(i, current_state_, weight_matrix_);
+    return sign(local_field);
+  });
+
+  assert(new_state.size() == 4096);
+  assert(std::all_of(new_state.begin(), new_state.end(),
+                     [](int value) { return value == +1 || value == -1; }));
+
+  auto has_converged = (new_state == current_state_);
+
+  current_state_ = new_state;
+  ++current_iteration_;
+
+  return !has_converged;
+}
+
 void Recall::network_update_dynamics()
 {
   assert(weight_matrix_.neurons() == 4096);
   assert(weight_matrix_.weights().size() == 8'386'560);
 
-  auto pattern = noisy_pattern_.pattern();
-  assert(pattern.size() == 4096);
+  assert(noisy_pattern_.size() == 4096);
+  assert(std::all_of(noisy_pattern_.pattern().begin(),
+                     noisy_pattern_.pattern().end(),
+                     [](int value) { return value == +1 || value == -1; }));
+  assert(cut_pattern_.size() == 4096);
+  assert(std::all_of(cut_pattern_.pattern().begin(),
+                     cut_pattern_.pattern().end(),
+                     [](int value) { return value == +1 || value == -1; }));
 
-  sf::RenderWindow window(sf::VideoMode(64, 64), "Network update dynamics");
-  window.setFramerateLimit(60);
+  assert(current_state_.size() == 0);
 
-  sf::Texture texture;
-  texture.create(64, 64);
-  sf::Sprite sprite(texture);
-  sprite.setScale(8., 8.);
+  // Choose between noisy_pattern_ and cut_pattern_
+  current_state_ = noisy_pattern_.pattern();
 
-  std::vector<sf::Uint8> pixels;
-  //std::generate_n(std::back_inserter(pixels), 3 * pattern.size(), []() { ; });
+  assert(current_state_.size() == 4096);
+  assert(current_state_ == noisy_pattern_.pattern());
 
-  bool has_converged{false};
+  auto original_energy =
+      hopfield_energy(original_pattern_.pattern(), weight_matrix_);
+  std::cout << "Original pattern's energy: " << original_energy << '\n';
 
-  while (!has_converged || window.isOpen()) {
+  auto current_energy = hopfield_energy(current_state_, weight_matrix_);
+  std::cout << "Initial energy: " << current_energy << '\n';
+
+  assert(current_iteration_ == 0);
+
+  while (single_network_update()) {
+    current_energy = hopfield_energy(current_state_, weight_matrix_);
+    std::cout << "Iteration " << current_iteration_
+              << ". Current energy: " << current_energy << '\n';
+  }
+
+  assert(!single_network_update());
+  assert(current_energy == hopfield_energy(current_state_, weight_matrix_));
+
+  if (current_state_ == original_pattern_.pattern()) {
+    assert(current_energy == original_energy);
+    std::cout << "The original pattern has been recomposed." << '\n';
+  } else {
+    std::cout << "The original pattern has not been recomposed." << '\n';
+  }
+}
+
+/*void Recall::network_update_dynamics()
+{
+  sf::Image starting_image, updated_image;
+  starting_image.create(64, 64);
+  updated_image.create(64, 64);
+
+  unsigned int x{0}, y{0};
+
+  for (auto value : noisy_pattern_.pattern()) {
+    auto color = compute_color(value);
+    starting_image.setPixel(x, y, color);
+    updated_image.setPixel(x, y, color);
+
+    if (x + 1 == 64) {
+      x = 0;
+      ++y;
+    } else {
+      ++x;
+    }
+  }
+  assert(x == 0 && y == 64);
+  assert(starting_image.getSize().x == 64 && starting_image.getSize().y == 64);
+  assert(updated_image.getSize().x == 64 && updated_image.getSize().y == 64);
+
+  // float scale = 5.f;
+  sf::RenderWindow window(sf::VideoMode(2 * 64, 64), "Network update dynamics");
+
+  sf::Texture starting_texture, updated_texture;
+
+  starting_texture.loadFromImage(starting_image);
+  sf::Sprite starting_sprite(starting_texture);
+  // starting_sprite.setScale(scale, scale);
+  starting_sprite.setPosition(0, 0);
+
+  updated_texture.loadFromImage(updated_image);
+  sf::Sprite updated_sprite(updated_texture);
+  // updated_sprite.setScale(scale, scale);
+  updated_sprite.setPosition(63, 0);
+
+  window.clear();
+  window.draw(starting_sprite);
+  window.draw(updated_sprite);
+  window.display();
+
+  while (window.isOpen()) {
     sf::Event event;
     while (window.pollEvent(event)) {
       if (event.type == sf::Event::Closed) {
@@ -233,45 +394,26 @@ void Recall::network_update_dynamics()
       }
     }
 
-    for (std::size_t i{0}; i != pattern.size(); ++i) {
+    x = 0;
+    y = 0;
+
+    for (auto current_value : current_state_) {
+      updated_image.setPixel(x, y, compute_color(new_value));
+      if (x + 1 == 64) {
+        x = 0;
+        ++y;
+      } else {
+        ++x;
+      }
     }
 
-    texture.update(pixels.data());
+    updated_texture.update(updated_image);
 
-    window.clear(sf::Color::Black);
-    window.draw(sprite);
+    window.clear();
+    window.draw(starting_sprite);
+    window.draw(updated_sprite);
     window.display();
   }
-
-  std::vector<int> pattern_t0;
-  std::size_t index{0};
-  while (!has_converged) {
-    ++index;
-    has_converged = true;
-    pattern_t0    = pattern;
-    std::transform(pattern_t0.begin(), pattern_t0.end(), pattern.begin(),
-                   [&index, this, &has_converged, &pattern_t0](int value) {
-                     auto new_value =
-                         hopfield_rule(index, pattern_t0, weight_matrix_);
-                     if (has_converged == true && new_value != value) {
-                       has_converged = false;
-                     }
-                     return new_value;
-                   });
-
-    /*sf::Image image;
-    image.create(64, 64);
-
-    for (unsigned int y{0}; y < 64; ++y) {
-      for (unsigned int x{0}; x < 64; ++x) {
-        auto index = y * 64 + x;
-        auto value = pattern[index];
-        assert(value == +1 || value == -1);
-        auto color = value == +1 ? sf::Color::White : sf::Color::Black;
-        image.setPixel(x, y, color);
-      }
-    }*/
-  }
-}
+}*/
 
 } // namespace nn

@@ -23,6 +23,62 @@
 #include <fstream>
 #include <string>
 
+TEST_CASE("Testing the free functions")
+{
+  nn::Weight_Matrix weight_matrix(4);
+  REQUIRE(weight_matrix.weights().size() == 0);
+
+  std::vector<std::vector<int>> patterns{{-1, 1, 1, -1}, {1, -1, -1, 1}};
+
+  weight_matrix.fill(patterns, 4);
+  REQUIRE(weight_matrix.weights().size() == 6);
+  REQUIRE(weight_matrix.at(1, 2) == -.5);
+  REQUIRE(weight_matrix.at(1, 3) == -.5);
+  REQUIRE(weight_matrix.at(1, 4) == .5);
+  REQUIRE(weight_matrix.at(2, 3) == .5);
+  REQUIRE(weight_matrix.at(2, 4) == -.5);
+  REQUIRE(weight_matrix.at(3, 4) == -.5);
+
+  std::vector<int> current_state{-1, -1, 1, -1};
+
+  SUBCASE("Checking the local field computations and the sign function")
+  {
+    CHECK(nn::hopfield_local_field(1, current_state, weight_matrix) == -.5);
+    CHECK(nn::hopfield_local_field(2, current_state, weight_matrix) == 1.5);
+    CHECK(nn::hopfield_local_field(3, current_state, weight_matrix) == .5);
+    CHECK(nn::hopfield_local_field(4, current_state, weight_matrix) == -.5);
+
+    CHECK(nn::sign(-.5) == -1);
+    CHECK(nn::sign(1.5) == +1);
+    CHECK(nn::sign(.5) == +1);
+    CHECK(nn::sign(-.5) == -1);
+
+    CHECK(nn::sign(0.) == +1);
+
+    CHECK(nn::hopfield_local_field(1, {1}, weight_matrix) == 0.);
+  }
+
+  std::vector<int> state{1, -1, 1, -1};
+
+  SUBCASE("Checking the local fields vector")
+  {
+    std::vector<double> local_fields{-.5, 1.5, .5, -.5};
+    REQUIRE(nn::hopfield_local_fields(current_state, weight_matrix)
+            == local_fields);
+
+    std::vector fields{-.5, .5, -.5, .5};
+    CHECK(nn::hopfield_local_fields(state, weight_matrix) == fields);
+  }
+
+  SUBCASE("Checking the energy computation")
+  {
+    CHECK(nn::hopfield_energy(current_state, weight_matrix) == 0.);
+    CHECK(nn::hopfield_energy(state, weight_matrix) == 1.);
+    CHECK(nn::hopfield_energy(patterns[0], weight_matrix) == -3.);
+    CHECK(nn::hopfield_energy(patterns[1], weight_matrix) == -3.);
+  }
+}
+
 TEST_CASE("Testing the Recall class on invalid directories")
 {
   SUBCASE("Non existing patterns and weight matrix directory "
@@ -154,8 +210,28 @@ TEST_CASE("Testing corrupt_pattern()")
   }
 }
 
-TEST_CASE("")
+TEST_CASE("Testing network_update_dynamics()")
 {
   REQUIRE(recall.weight_matrix().neurons() == 4096);
   REQUIRE(recall.weight_matrix().weights().size() == 8'386'560);
+
+  for (int i{1}; i != 5; ++i) {
+    std::filesystem::path name{std::to_string(i) + ".txt"};
+
+    recall.corrupt_pattern(name);
+
+    REQUIRE(recall.original_pattern().size() == 4096);
+    REQUIRE(recall.noisy_pattern().size() == 4096);
+    REQUIRE(recall.cut_pattern().size() == 4096);
+
+    recall.clear_state();
+
+    REQUIRE(recall.current_state().size() == 0);
+    REQUIRE(recall.current_iteration() == 0);
+
+    recall.network_update_dynamics();
+
+    CHECK(recall.current_state().size() == 4096);
+    CHECK(recall.current_iteration() > 0);
+  }
 }

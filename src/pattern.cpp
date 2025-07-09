@@ -3,7 +3,6 @@
 // This path is the only one relative to "pattern.cpp"
 #include "../include/pattern.hpp"
 
-#include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cassert>
 #include <fstream>
@@ -12,6 +11,12 @@
 #include <string>
 
 namespace nn {
+
+sf::Color compute_color(int value)
+{
+  assert(value == +1 || value == -1);
+  return value == +1 ? sf::Color::White : sf::Color::Black;
+}
 
 Pattern::Pattern()
     : pattern_{}
@@ -138,10 +143,7 @@ void Pattern::create_image(std::filesystem::path const& binarized_directory,
 
   for (unsigned int y{0}; y < height; ++y) {
     for (unsigned int x{0}; x < width; ++x) {
-      auto index = y * width + x;
-      auto value = pattern_[index];
-      assert(value == +1 || value == -1);
-      auto color = value == +1 ? sf::Color::White : sf::Color::Black;
+      auto color = compute_color(pattern_[y * width + x]);
       image.setPixel(x, y, color);
     }
   }

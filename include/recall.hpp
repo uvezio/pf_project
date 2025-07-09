@@ -8,11 +8,21 @@
 #include "weight_matrix.hpp"
 
 #include <filesystem>
+#include <vector>
 
 namespace nn {
 
-int hopfield_rule(std::size_t index, std::vector<int> const& pattern,
-                  std::vector<double> const& weights);
+int sign(double value);
+
+double hopfield_local_field(std::size_t index,
+                            std::vector<int> const& current_state,
+                            Weight_Matrix const& weight_matrix);
+
+std::vector<double> hopfield_local_fields(std::vector<int> const& current_state,
+                                          Weight_Matrix const& weight_matrix);
+
+double hopfield_energy(std::vector<int> const& current_state,
+                       Weight_Matrix const& weight_matrix);
 
 class Recall
 {
@@ -21,6 +31,9 @@ class Recall
   Pattern original_pattern_;
   Pattern noisy_pattern_;
   Pattern cut_pattern_;
+  std::vector<int> current_state_;
+  std::size_t current_iteration_;
+
   const std::filesystem::path weight_matrix_directory_;
   const std::filesystem::path patterns_directory_;
   const std::filesystem::path corrupted_directory_;
@@ -48,9 +61,17 @@ class Recall
 
   const Pattern& cut_pattern() const;
 
+  const std::vector<int>& current_state() const;
+
+  std::size_t current_iteration() const;
+  
+  void clear_state();
+
   // Acquires and corrupt a pattern from "../base_directory/patterns/" and saves
   // the corrupted pattern and image in "../base_directory/corrupted_files/"
   void corrupt_pattern(std::filesystem::path const& name);
+
+  bool single_network_update();
 
   void network_update_dynamics();
 };
