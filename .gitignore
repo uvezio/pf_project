@@ -2,7 +2,12 @@
 
 build/
 
-corrupted_files/
-images/binarized_images/
-patterns/
+images/binarized_images/*
+!images/binarized_images/ae.png
+
+patterns/*
+!patterns/ae.txt
+
 weight_matrix/
+
+!tests/*
