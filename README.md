@@ -1,10 +1,10 @@
 # Hopfield Neural Network
 
-This repository contains my final project for the Programming for Physics course at University of Bologna (Academic Year 2024/2025).
+This repository contains my final project for the Programming for Physics course at the University of Bologna (Academic Year 2024/2025).
 
 The project implements a **Hopfield neural network** composed of **4096 neurons**, capable of storing and retrieving binary patterns representing **64×64 black-and-white images**.
 
-The repository contains the entire implementation of the assignment including the **C++ code**, configuration files, tests, input data, and generated outputs.
+The repository contains the entire implementation of the assignment including the **C++ source code**, configuration files, tests, input data, and generated outputs.
 
 ## Table of Contents
 
@@ -30,16 +30,16 @@ The project was developed based on the assignment provided by the course instruc
 
 The network consists of 4096 neurons, corresponding to the pixels of a 64×64 black-and-white image. Each pixel is converted into a binary state, and the resulting image is represented as a binary pattern.
 
-The implementation is organized into **three** logically and operationally **independent main components**, corresponding to the three main stages of a Hopfield network's operation:
+The implementation is organized into **three** logically and operationally **independent main components**, corresponding to the three stages of a Hopfield network's operation:
 
-1. **Acquisition** – conversion of external color image files with arbitrary resolution into the internal binary representation (**binary patterns**) used by the network;
+1. **Acquisition** – conversion of external color image files of arbitrary dimensions and resolution into the internal binary representation (**binary patterns**) used by the network;
 <div style="text-align: center;"> <img src="README_assets/image/ae.jpg" alt="original image" width="20%"> <img src="README_assets/image/ae.png" alt="binarized image" width="20%"> </div>
 
-2. **Training** – application of the Hebbian learning rule to the acquired patterns to construct the network's memory as a **weight matrix**;
+2. **Training** – application of the Hebbian learning rule to the acquired patterns to construct the network memory, represented by a 4096×4096 symmetric **weight matrix**;
 
 3. **Recall** – reconstruction of a corrupted pattern using the already-trained network.
 
-Note that the training phase does not need to be repeated every time a new recall experiment is performed.
+Importantly, the training phase does not need to be repeated every time a new recall experiment is performed.
 
 ## Code Architecture
 
@@ -49,7 +49,7 @@ The codebase is written entirely in C++ and is logically divided into **five com
 |-----------|----------------|
 | Pattern | Binary representation |
 | Acquisition | Image preprocessing |
-| Weight Matrix | Network's memory |
+| Weight Matrix | Network memory |
 | Training | Hebbian learning |
 | Recall | Pattern reconstruction |
 
@@ -62,7 +62,7 @@ Each component typically consists of:
 
 Each header/implementation file pair defines a single class, whose name matches the corresponding file name, together with a set of supporting free functions.
 
-Each one of the three main phases also include a dedicated entry-point (`main`) source file (`main_<phase>.cpp`).
+Each of the three main phases also include a dedicated entry-point (`main`) source file (`main_<phase>.cpp`).
 
 ### Executables
 
@@ -71,11 +71,11 @@ Each entry-point file produces a separate executable (see [Building and Running]
 2. `training`
 3. `recall`
 
-This choice was made to keep the three main phases of the program mutually independent also from an execution point of view.
+This choice was made to keep the three main phases of the program mutually independent also from an execution perspective.
 
-1. The acquisition phase processes external images and converts them into binary patterns: this phase can therefore be considered a **preprocessing step** required by the network rather than a direct part of the network's memory dynamics.
+1. The acquisition phase processes external images and converts them into binary patterns: this phase can be considered a **preprocessing step** required by the network rather than a direct part of the network's memory dynamics.
 
-2. The training phase reads the previously acquired patterns and constructs the network's weight matrix; since the resulting weight matrix can be stored on disk, training **does not need to be repeated** every time a recall experiment is performed.
+2. The training phase reads the previously acquired patterns and constructs the network's weight matrix; as the resulting weight matrix can be stored on disk, training **does not need to be repeated** every time a recall experiment is performed.
 
 3. The recall phase uses the previously generated weight matrix to reconstruct corrupted patterns.
 
@@ -93,22 +93,22 @@ sudo apt install libsfml-dev
 
 ### Error Handling
 
-The project adopts a consistent error-handling strategy throughout the codebase, following these guidelines.
+The project adopts a consistent error-handling strategy throughout the codebase, based on the following principles.
 
 - Errors caused by external inputs (such as image or pattern loading failures) are handled by **throwing exceptions** accompanied by **detailed error messages**.
 
-- For all other cases, internal logic errors are detected using extensive `assert` statements to verify preconditions, intermediate conditions, and postconditions. This allows the program to **terminate immediately** in case of an invalid state, preventing errors from propagating.
+- For all other cases, internal logic errors are detected by an extensive use of `assert` statements to verify preconditions, intermediate conditions, and postconditions. This allows the program to **terminate immediately** in case of an invalid state, preventing errors from propagating.
 
 Although this approach may affect performance in Debug builds, the impact is negligible in Release builds (see [Building and Running](#building-and-running)).
 
 ## Repository Structure
 
-The project root is `pf_project/`, which includes the `CMakeLists.txt` and `.clang-format` configuration files. In addition:
+The project root directory is `pf_project/`, which includes the `CMakeLists.txt` and `.clang-format` configuration files. In addition:
 - the header files are stored in the `include/` directory;
 - the source files are located in `src/`;
 - the three entry-point files are placed in `main/`.
 
-A simplified overview of the starting project root is:
+A simplified overview of the initial project structure is:
 
 ```text
 pf_project/
@@ -127,7 +127,7 @@ pf_project/
 └── ...
 ```
 
-After running the three executables, new directories are generated, which contain the three phases outputs (see [Input/Output and File Formats](#inputoutput-and-file-formats)).
+After running the three executables, new directories are generated, which contain the outputs of the three phases (see [Input/Output and File Formats](#inputoutput-and-file-formats)).
 
 ```text
 pf_project/
@@ -159,7 +159,7 @@ The actual repository structure may contain additional files such as:
 
 ## Input/Output and File Formats
 
-The program input files are **arbitrary-resolution color images** stored in `images/source_images/`. The supported formats are `.jpg`, `.jpeg`, and `.png`.
+The program input files are **color images with arbitrary dimensions and resolutions** stored in `images/source_images/`. The supported formats are `.jpg`, `.jpeg`, and `.png`.
 
 1. During the acquisition phase, these images are converted into **binary patterns** (text files with `.txt` extension stored in `patterns/`) and **binarized images** (in `.png` format stored in `images/binarized_images/`).
 
@@ -169,7 +169,7 @@ The program input files are **arbitrary-resolution color images** stored in `ima
 
 ## Testing Strategy
 
-Due to the complexity of the program, which can potentially process a large number of images that would be impractical to handle during testing, and to avoid generating test files inside the regular input/output directories, **dedicated test directories** have been added under `tests/`.
+Due to the complexity of the program, which may process a large number of images that would be impractical to handle during testing, and to avoid generating test files inside the regular input/output directories, **dedicated test directories** have been added under `tests/`.
 
 These directories replicate the structure of the main project directories and emulate the behavior of the program during normal execution. In particular, `tests/images/source_images/` contains four test color images.
 
@@ -193,7 +193,7 @@ The project requires:
 
 ## Building and Running
 
-The project uses **CMake** as its build system, **Ninja** as the build tool, and requires a **C++20-compatible compiler**. The commands below configure the project using the **Ninja Multi-Config** generator, allowing both **Debug and Release configurations** to be built from the same build directory.
+The project uses **CMake** as its build system, **Ninja** as the build tool, and requires a **C++20-compatible compiler**. The commands below configure the project using the **Ninja Multi-Config** generator, allowing both the **Debug and Release configurations** to be built from the same build directory.
 
 From the `pf_project/` directory, the following commands can be used to generate the build directory, compile the executables, and run the tests in both Debug and Release configurations:
 
@@ -219,7 +219,7 @@ The same procedure can be followed to run the `training` and `recall` executable
 
 ## Results
 
-The `main_recall.cpp` executable corrupts the `ae.txt` pattern by adding random noise. Other input images, as well as occluded versions of the same image, can also be tested by modifying the source file.
+The `recall` executable corrupts the `ae.txt` pattern by adding random noise. Other input images, as well as occluded versions of the same image, can also be tested by modifying the source file.
 
 <div style="text-align: center;"> <img src="README_assets/image/ae.noise.png" alt="noisy image" width="20%"> <img src="README_assets/image/ae.cut.png" alt="occluded image" width="20%"> </div>
 
@@ -231,15 +231,12 @@ This behavior is likely due to the intrinsic limitations of the Hopfield network
 - reducing the number of stored patterns, thereby increasing the network capacity available for each memory;
 - choosing training images that are more nearly **orthogonal** to one another.
 
-As observed during unit testing, when only the four test patterns are stored, each of them is successfully reconstructed.
+As observed during unit testing, when only the four test patterns are stored in the network, each of them is successfully reconstructed.
 
-<div style="text-align: center;"> <img src="README_assets/tests_image/2.jpeg" alt="original tests image" width="20%"> <img src="README_assets/tests_image/2.png" alt="binarized tests image" width="20%"> <img src="README_assets/tests_image/2.noise.png" alt="noisy tests image" width="20%"> <img src="README_assets/tests_image/2.cut.png" alt="occluded tests image" width="20%"> <img src="README_assets/tests_image/2.restored.png" alt="restored tests image" width="20%"> </div>
+<div style="text-align: center;"> <img src="README_assets/tests_image/2.jpeg" alt="original tests image" width="19%"> <img src="README_assets/tests_image/2.png" alt="binarized tests image" width="19%"> <img src="README_assets/tests_image/2.noise.png" alt="noisy tests image" width="19%"> <img src="README_assets/tests_image/2.cut.png" alt="occluded tests image" width="19%"> <img src="README_assets/tests_image/2.restored.png" alt="restored tests image" width="19%"> </div>
 
 ## Use of AI
 
 Artificial Intelligence tools (specifically ChatGPT) were used during the development of this project only to provide feedback on design alternatives proposed during development and to explain the theoretical usage of the SFML Graphics library.
 
 The only AI-generated code included in the project is the bilinear interpolation routine implemented in `acquisition.cpp`, which was adopted after difficulties were encountered in developing an effective implementation for resizing the input images.
-
-// Ripetizioni
-// cancellare output e modificare gitignore
