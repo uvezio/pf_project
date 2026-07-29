@@ -103,7 +103,7 @@ Although this approach may affect performance in Debug builds, the impact is neg
 
 ## Repository Structure
 
-The project root directory is `pf_project/`, which includes the `CMakeLists.txt` and `.clang-format` configuration files. In addition:
+The project root directory is `hopfield-neural-network/`, which includes the `CMakeLists.txt` and `.clang-format` configuration files. In addition:
 - the header files are stored in the `include/` directory;
 - the source files are located in `src/`;
 - the three entry-point files are placed in `main/`.
@@ -111,7 +111,7 @@ The project root directory is `pf_project/`, which includes the `CMakeLists.txt`
 A simplified overview of the initial project structure is:
 
 ```text
-pf_project/
+hopfield-neural-network/
 ├── CMakeLists.txt
 ├── .clang-format
 ├── include/
@@ -130,7 +130,7 @@ pf_project/
 After running the three executables, new directories are generated, which contain the outputs of the three phases (see [Input/Output and File Formats](#inputoutput-and-file-formats)).
 
 ```text
-pf_project/
+hopfield-neural-network/
 ├── CMakeLists.txt
 ├── .clang-format
 ├── include/
@@ -173,7 +173,7 @@ Due to the complexity of the program, which may process a large number of images
 
 These directories replicate the structure of the main project directories and emulate the behavior of the program during normal execution. In particular, `tests/images/source_images/` contains four test color images.
 
-For this reason, the `Acquisition`, `Training`, and `Recall` classes provide a **constructor overload** that accepts the string `"tests/"`. When this parameter is specified, the reference directory is changed from the project root `pf_project/` to the test directory `pf_project/tests/`.
+For this reason, the `Acquisition`, `Training`, and `Recall` classes provide a **constructor overload** that accepts the string `"tests/"`. When this parameter is specified, the reference directory is changed from the project root `hopfield-neural-network/` to the test directory `hopfield-neural-network/tests/`.
 
 The `tests/` directory also contains the `doctest.h` header required by the **doctest** testing framework, which is used to implement all unit tests.
 
@@ -195,7 +195,7 @@ The project requires:
 
 The project uses **CMake** as its build system, **Ninja** as the build tool, and requires a **C++20-compatible compiler**. The commands below configure the project using the **Ninja Multi-Config** generator, allowing both the **Debug and Release configurations** to be built from the same build directory.
 
-From the `pf_project/` directory, the following commands can be used to generate the build directory, compile the executables, and run the tests in both Debug and Release configurations:
+From the `hopfield-neural-network/` directory, the following commands can be used to generate the build directory, compile the executables, and run the tests in both Debug and Release configurations:
 
 ```bash
 cmake -S . -B build -G"Ninja Multi-Config"
@@ -205,7 +205,7 @@ cmake --build build --config Release
 cmake --build build --config Release --target test
 ```
 
-The generated build directory is created inside `pf_project/`.
+The generated build directory is created inside `hopfield-neural-network/`.
 
 To run the `acquisition` executable, for example, execute the following commands from the project root:
 
