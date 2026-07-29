@@ -2,12 +2,18 @@
 
 build/
 
-images/binarized_images/*
-!images/binarized_images/ae.png
+images/binarized_images/
 
-patterns/*
-!patterns/ae.txt
+patterns/
 
 weight_matrix/
 
-!tests/*
+corrupted_files/
+
+tests/images/binarized_images/*
+
+tests/patterns/*
+
+tests/weight_matrix/*
+
+tests/corrupted_files/*
