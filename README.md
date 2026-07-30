@@ -4,7 +4,7 @@ This repository contains my final project for the Programming for Physics course
 
 The project implements a **Hopfield neural network** composed of **4096 neurons**, capable of storing and retrieving binary patterns representing **64×64 black-and-white images**.
 
-The repository contains the entire implementation of the assignment including the **C++ source code**, configuration files, tests, input data, and generated outputs.
+The repository includes the entire implementation of the assignment including the **C++ source code**, configuration files, tests, input data, and generated outputs.
 
 ## Table of Contents
 
